@@ -293,6 +293,10 @@
       border: 1.5px solid var(--line); background: #fff; color: var(--ink);
     }
     .input:focus { outline: none; border-color: var(--gold); }
+    /* iPhone: ช่องวันที่กว้างเกินกรอบ → บังคับให้พอดี */
+    .input { min-width: 0; max-width: 100%; display: block; }
+    input[type=date].input { -webkit-appearance: none; appearance: none; min-height: 50px; text-align: left; }
+    input[type=date].input::-webkit-date-and-time-value { text-align: left; }
     .input.big { font-size: 26px; font-weight: 600; font-family: var(--font-en); padding: 12px 14px; }
     .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 16px 0; color: var(--ink-2); }
     .check input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--gold); flex: none; }
@@ -549,7 +553,7 @@ async function loadPublic() {
   debug('เริ่มโหลดข้อมูลจากหลังบ้าน…');
   try {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = setTimeout(() => ctrl && ctrl.abort(), 20000); // รอสูงสุด 20 วินาที
+    const timer = setTimeout(() => ctrl && ctrl.abort(), 30000); // รอสูงสุด 30 วินาที
     let res;
     try {
       res = await fetch(CONFIG.API_URL + '?action=public', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
@@ -572,7 +576,7 @@ async function loadPublic() {
       : /fetch|load failed|network/i.test(e.message) ? 'NETWORK' : e.message;
     debug('โหลดไม่สำเร็จ: ' + code + ' (' + e.message + ')');
     if (!state.data) renderPublicError(new Error(code));
-    else toast('อัปเดตข้อมูลไม่สำเร็จ แสดงข้อมูลล่าสุดที่มี', 'error');
+    // มีข้อมูลที่จำไว้แสดงอยู่แล้ว → ไม่ต้องแจ้งลูกค้า
   }
 }
 
