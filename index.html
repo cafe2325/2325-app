@@ -404,7 +404,9 @@ const TABS = [
 ];
 
 const ERROR_TEXT = {
-  NETWORK: 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่',
+  NETWORK: 'เชื่อมต่อหลังบ้านไม่ได้ ตรวจสอบอินเทอร์เน็ต หรือการตั้งค่า Deploy (Who has access: Anyone)',
+  TIMEOUT: 'หลังบ้านตอบช้าเกินไป ลองใหม่อีกครั้ง',
+  NOT_JSON: 'หลังบ้านตอบกลับไม่ถูกต้อง ตรวจสอบการตั้งค่า Deploy (Who has access: Anyone)',
   LINE_NOT_CONFIGURED: 'หลังบ้านยังไม่ได้ใส่ Channel ID (ขั้นที่ 3)',
   NO_TOKEN: 'กรุณาเปิดผ่านแอป LINE',
   INVALID_TOKEN: 'เซสชันหมดอายุ กรุณาปิดแล้วเปิดใหม่',
@@ -484,6 +486,24 @@ function session(op, key, val) {
   return null;
 }
 
+/** โหมดตรวจสอบ: เปิดลิงก์แอปแล้วต่อท้าย ?debug=1 จะมีกล่องบันทึกการทำงานด้านบน */
+const DEBUG = /debug=1/.test(decodeURIComponent(location.search));
+function debug(msg) {
+  console.log('[2325]', msg);
+  if (!DEBUG) return;
+  let box = document.getElementById('debug');
+  if (!box) {
+    box = document.createElement('pre');
+    box.id = 'debug';
+    box.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:99;max-height:40vh;overflow:auto;' +
+      'background:rgba(20,19,18,.92);color:#9fe3a8;font:12px/1.5 ui-monospace,monospace;padding:10px;border-radius:10px;white-space:pre-wrap;margin:0';
+    document.body.appendChild(box);
+  }
+  box.textContent += new Date().toTimeString().slice(0, 8) + '  ' + msg + '\n';
+}
+window.addEventListener('error', (e) => debug('JS error: ' + e.message));
+window.addEventListener('unhandledrejection', (e) => debug('Promise error: ' + ((e.reason && e.reason.message) || e.reason)));
+
 function placeholder() { return '<div class="ph">' + ICON.cup + '</div>'; }
 
 function imgTag(url, alt) {
@@ -517,18 +537,39 @@ const CACHE_KEY = 'app2325:public:' + CONFIG.API_URL.slice(-12);
 
 async function loadPublic() {
   const cached = store('get', CACHE_KEY);
-  if (cached && !state.data) setData(cached);
+  if (cached && !state.data) {
+    debug('ใช้ข้อมูลที่จำไว้ก่อน');
+    setData(cached);
+  }
 
+  const t0 = Date.now();
+  debug('เริ่มโหลดข้อมูลจากหลังบ้าน…');
   try {
-    const res = await fetch(CONFIG.API_URL + '?action=public', { cache: 'no-store' });
-    const d = await res.json();
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = setTimeout(() => ctrl && ctrl.abort(), 20000); // รอสูงสุด 20 วินาที
+    let res;
+    try {
+      res = await fetch(CONFIG.API_URL + '?action=public', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+    } finally {
+      clearTimeout(timer);
+    }
+    debug('หลังบ้านตอบกลับ HTTP ' + res.status + ' ใน ' + (Date.now() - t0) + ' ms');
+    const text = await res.text();
+    let d;
+    try { d = JSON.parse(text); } catch (e) {
+      debug('ข้อมูลที่ได้ไม่ใช่ JSON: ' + text.slice(0, 120));
+      throw new Error('NOT_JSON');
+    }
     if (!d.ok) throw new Error(d.error || 'SERVER_ERROR');
+    debug('ได้ข้อมูลแล้ว: เมนู ' + d.menu.length + ' หมวด');
     store('set', CACHE_KEY, d);
     setData(d);
   } catch (e) {
-    console.error(e);
-    if (!state.data) renderPublicError(e.message === 'Failed to fetch' ? new Error('NETWORK') : e);
-    else if (!cached) toast('อัปเดตข้อมูลไม่สำเร็จ', 'error');
+    const code = e.name === 'AbortError' ? 'TIMEOUT'
+      : /fetch|load failed|network/i.test(e.message) ? 'NETWORK' : e.message;
+    debug('โหลดไม่สำเร็จ: ' + code + ' (' + e.message + ')');
+    if (!state.data) renderPublicError(new Error(code));
+    else toast('อัปเดตข้อมูลไม่สำเร็จ แสดงข้อมูลล่าสุดที่มี', 'error');
   }
 }
 
@@ -538,12 +579,25 @@ function setData(d) {
   state.dataKey = key;
   state.data = d;
   document.title = d.shop.shopName || '2325 CAFE';
-  renderHome();
-  renderMenu();
-  renderDelivery();
+  safeRender('home', renderHome);
+  safeRender('menu', renderMenu);
+  safeRender('delivery', renderDelivery);
   if (state.page === 'reward' && state.me) renderMember();
   if ($('#staff-shop')) $('#staff-shop').textContent = d.shop.shopName;
   if (state.page === 'staff' && state.staffMember) renderStaffMember();
+}
+
+/** ถ้าหน้าไหนแสดงผลพัง ให้ขึ้นข้อความแทนการค้าง */
+function safeRender(page, fn) {
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+    debug('แสดงหน้า ' + page + ' ไม่สำเร็จ: ' + e.message);
+    $('#view-' + page).innerHTML = '<div class="card center" style="margin-top:24px">' +
+      '<p class="card-title">แสดงหน้านี้ไม่สำเร็จ</p>' +
+      '<p class="muted small">' + esc(e.message) + '</p></div>';
+  }
 }
 
 function renderPublicError(e) {
@@ -1249,6 +1303,7 @@ document.addEventListener('click', (ev) => {
   if (l) { ev.preventDefault(); openLink(l.dataset.link); }
 });
 
+debug('เริ่มแอป · หน้า ' + initialPage() + ' · ' + navigator.userAgent.slice(0, 90));
 buildTabbar();
 renderLoading();
 liffPromise = initLiff();
