@@ -428,6 +428,7 @@ const ERROR_TEXT = {
   SHEET_NOT_READY: 'หลังบ้านยังไม่พร้อม (ยังไม่ได้สร้างชีต)',
   MISSING_COLUMN: 'หัวคอลัมน์ใน Sheet ถูกเปลี่ยนชื่อ',
   SERVER_ERROR: 'ระบบหลังบ้านมีปัญหา',
+  GOT_GET_RESPONSE: 'หลังบ้านตอบกลับผิดประเภท (ส่งภาพหน้าจอโหมด debug ให้ผู้ดูแลระบบ)',
 };
 
 
@@ -877,6 +878,11 @@ async function api(action, data) {
   } catch (e) {
     throw new Error('NETWORK');
   }
+  debug('API ' + action + ' → ' + JSON.stringify(out).slice(0, 160));
+  if (out.ok && out.message && !out.profile && !out.member && !out.recent) {
+    // ได้คำตอบของ doGet แทน doPost (คำขอถูกเปลี่ยนเป็น GET ระหว่างทาง)
+    throw new Error('GOT_GET_RESPONSE');
+  }
   if (!out.ok) {
     // token หมดอายุ → ล็อกอินใหม่ 1 ครั้ง
     if (out.error === 'INVALID_TOKEN' && !session('get', 'relogin')) {
@@ -946,7 +952,7 @@ function renderRegister() {
     '<div class="notice">' + ICON.star + '<div>' + esc(intro) + '</div></div>' +
     '<form class="card" id="f-reg" novalidate>' +
     '<label class="f" for="r-name" style="margin-top:0">ชื่อเล่น</label>' +
-    '<input class="input" id="r-name" maxlength="40" autocomplete="nickname" value="' + esc(state.me.profile.name) + '">' +
+    '<input class="input" id="r-name" maxlength="40" autocomplete="nickname" value="' + esc((state.me.profile || {}).name) + '">' +
     '<label class="f" for="r-phone">เบอร์โทรศัพท์</label>' +
     '<input class="input" id="r-phone" type="tel" inputmode="numeric" maxlength="12" placeholder="08x-xxx-xxxx" autocomplete="tel">' +
     '<label class="f" for="r-bd">วันเกิด <span class="muted small">(ไม่บังคับ · รับสิทธิพิเศษเดือนเกิด)</span></label>' +
