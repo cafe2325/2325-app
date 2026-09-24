@@ -1,0 +1,1259 @@
+<!doctype html>
+<!--
+  ════════════════════════════════════════════════════════════════
+   2325 App — หน้าแอป (LINE LIFF)
+  ════════════════════════════════════════════════════════════════
+   หน้าในแอป (เปิดด้วย ?page=...)
+     ?page=home      หน้าแรก
+     ?page=menu      เมนู
+     ?page=delivery  เดลิเวอรี่
+     ?page=reward    บัตรสมาชิก / สะสมแต้ม   (ใช้ได้หลังเชื่อม LINE)
+     ?page=staff     โหมดพนักงาน             (ใช้ได้หลังเชื่อม LINE)
+
+   ส่วนที่ต้องแก้มีที่เดียว: "ส่วนที่ 1: ตั้งค่า" ใน <script> ด้านล่าง
+   ✏️ = แก้ได้      ⛔ = ไม่ต้องแก้
+  ════════════════════════════════════════════════════════════════
+-->
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F6F1E7">
+  <title>2325 CAFE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ A: สีและตัวอักษร   ✏️ เปลี่ยนสีได้ตรงนี้
+       ═══════════════════════════════════════ */
+    :root {
+      --bg: #F6F1E7;          /* พื้นหลังครีม */
+      --card: #FCFAF5;        /* การ์ด */
+      --ink: #2B2A28;         /* ตัวหนังสือหลัก / เทาดำ */
+      --ink-2: #5B5750;       /* ตัวหนังสือรอง */
+      --muted: #8A8178;       /* ตัวหนังสือจาง */
+      --gold: #B8894A;        /* สีเน้น ทองกาแฟ */
+      --gold-soft: #EFE3CF;   /* ทองอ่อน */
+      --wood: #D9C3A0;        /* ไม้สีอ่อน */
+      --line: #E8DFD0;        /* เส้นแบ่ง */
+      --ok: #4E7A5A;
+      --danger: #B4533F;
+      --radius: 18px;
+      --font: 'IBM Plex Sans Thai', system-ui, sans-serif;
+      --font-en: 'Montserrat', 'IBM Plex Sans Thai', sans-serif;
+      --tabbar-h: 64px;
+    }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ B: พื้นฐาน   ⛔
+       ═══════════════════════════════════════ */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: var(--font); font-size: 16px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);
+    }
+    body.no-tabbar { padding-bottom: 24px; }
+    [hidden] { display: none !important; }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3, p { margin: 0; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+    .en { font-family: var(--font-en); letter-spacing: .08em; text-transform: uppercase; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .center { text-align: center; }
+
+    .page-head { padding: 22px 0 14px; }
+    .page-head .en { font-size: 12px; color: var(--gold); }
+    .page-head h1 { font-size: 26px; font-weight: 600; line-height: 1.25; }
+
+    .card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--line); padding: 18px; margin-bottom: 14px;
+    }
+    .card-title { font-size: 17px; font-weight: 600; margin-bottom: 12px; }
+
+    .btn {
+      font: inherit; font-weight: 500; border: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px 16px; border-radius: 14px;
+      background: var(--ink); color: var(--bg); transition: transform .08s, opacity .2s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .45; cursor: default; }
+    .btn.gold { background: var(--gold); color: #fff; }
+    .btn.soft { background: var(--gold-soft); color: var(--ink); }
+    .btn.line { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+    .btn.ghost { background: transparent; color: var(--muted); padding: 10px; font-size: 14px; }
+    .btn svg { width: 20px; height: 20px; flex: none; }
+
+    .spinner {
+      width: 32px; height: 32px; margin: 40px auto; border-radius: 50%;
+      border: 3px solid var(--gold-soft); border-top-color: var(--gold);
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .skeleton {
+      background: linear-gradient(90deg, #EDE5D8 25%, #F4EEE4 50%, #EDE5D8 75%);
+      background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 12px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .notice {
+      background: var(--gold-soft); border-radius: 14px; padding: 12px 14px;
+      font-size: 14px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px;
+    }
+    .notice svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--gold); }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ C: แถบเมนูด้านล่าง   ⛔
+       ═══════════════════════════════════════ */
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+      background: rgba(252, 250, 245, .96); backdrop-filter: blur(10px);
+      border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tabbar .inner { max-width: 480px; margin: 0 auto; display: flex; height: var(--tabbar-h); }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; font-size: 11.5px; color: var(--muted); background: none; border: 0; font-family: var(--font);
+      cursor: pointer;
+    }
+    .tab svg { width: 23px; height: 23px; }
+    .tab.active { color: var(--ink); font-weight: 600; }
+    .tab.active svg { color: var(--gold); }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ D: หน้าแรก   ⛔
+       ═══════════════════════════════════════ */
+    .hero {
+      position: relative; margin: 16px 0 14px; border-radius: 22px; overflow: hidden;
+      min-height: 220px; display: flex; align-items: flex-end;
+      background:
+        radial-gradient(120% 90% at 100% 0%, rgba(217, 195, 160, .28), transparent 60%),
+        linear-gradient(160deg, #3A3733 0%, #2B2A28 55%, #22211F 100%);
+      color: #F6F1E7;
+    }
+    .hero img.cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .hero::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(20,19,18,.72) 100%);
+    }
+    .hero .txt { position: relative; z-index: 1; padding: 22px; width: 100%; }
+    .hero .logo { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; margin-bottom: 12px; background: #fff; }
+    .hero .name { font-family: var(--font-en); font-weight: 700; font-size: 30px; letter-spacing: .06em; line-height: 1.1; }
+    .hero .tagline { opacity: .82; margin-top: 4px; font-size: 15px; }
+
+    .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .quick a {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      padding: 14px 6px 12px; text-align: center; font-size: 13px; font-weight: 500;
+    }
+    .quick svg { width: 28px; height: 28px; color: var(--gold); margin: 0 auto 6px; display: block; }
+
+    .info-row { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+    .info-row:first-of-type { border-top: 0; padding-top: 2px; }
+    .info-row svg { width: 20px; height: 20px; color: var(--gold); flex: none; margin-top: 2px; }
+    .info-row .lbl { font-size: 13px; color: var(--muted); }
+    .info-row .val { white-space: pre-line; }
+    .info-row .act { margin-left: auto; align-self: center; flex: none; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+      padding: 7px 12px; border-radius: 999px; background: var(--gold-soft); color: var(--ink);
+      border: 0; font-family: var(--font); cursor: pointer;
+    }
+    .social { display: flex; gap: 10px; margin-top: 4px; }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ E: เมนู   ⛔
+       ═══════════════════════════════════════ */
+    .chips {
+      position: sticky; top: 0; z-index: 10; background: var(--bg);
+      display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px; margin: 0 -16px 8px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none; font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 999px;
+      border: 1.5px solid var(--line); background: var(--card); color: var(--ink-2); cursor: pointer;
+    }
+    .chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+    .reco { display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px 18px; padding: 2px 16px 6px; scrollbar-width: none; }
+    .reco::-webkit-scrollbar { display: none; }
+    .reco .item { flex: none; width: 150px; }
+    .reco .ph, .reco img { width: 150px; height: 150px; border-radius: 16px; object-fit: cover; }
+    .reco .nm { font-weight: 500; margin-top: 8px; font-size: 15px; line-height: 1.3; }
+
+    .cat-title { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 6px; scroll-margin-top: 64px; }
+    .cat-title h2 { font-size: 19px; font-weight: 600; }
+    .cat-title span { font-size: 13px; color: var(--muted); }
+
+    .mitem { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .mitem:last-child { border-bottom: 0; }
+    .mitem .ph, .mitem img { width: 76px; height: 76px; border-radius: 14px; object-fit: cover; flex: none; }
+    .mitem .body { flex: 1; min-width: 0; }
+    .mitem .nm { font-weight: 500; line-height: 1.35; }
+    .mitem .en-nm { font-size: 12px; color: var(--muted); font-family: var(--font-en); letter-spacing: .03em; }
+    .mitem .desc { font-size: 13.5px; color: var(--ink-2); margin-top: 3px; }
+    .mitem .price { font-weight: 600; flex: none; text-align: right; white-space: nowrap; }
+    .mitem.sold { opacity: .5; }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+      vertical-align: 2px; margin-left: 4px;
+    }
+    .badge.reco-b { background: var(--gold-soft); color: var(--gold); }
+    .badge.sold-b { background: var(--ink); color: var(--bg); }
+    .ph {
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, #EADBC3 0%, var(--wood) 100%); color: rgba(43, 42, 40, .35);
+    }
+    .ph svg { width: 34%; height: 34%; }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ F: เดลิเวอรี่   ⛔
+       ═══════════════════════════════════════ */
+    .dcard {
+      display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 18px; margin-bottom: 12px; font: inherit; color: inherit; cursor: pointer;
+    }
+    .dcard .ic { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; flex: none; color: #fff; }
+    .dcard .ic svg { width: 28px; height: 28px; }
+    .dcard .t { font-weight: 600; font-size: 17px; }
+    .dcard .s { font-size: 13.5px; color: var(--muted); }
+    .dcard .arr { margin-left: auto; color: var(--muted); }
+    .dcard .arr svg { width: 20px; height: 20px; }
+    .dcard:disabled { opacity: .55; cursor: default; }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ G: บัตรสมาชิก   ⛔
+       ═══════════════════════════════════════ */
+    .mcard {
+      position: relative; overflow: hidden; border-radius: 22px; padding: 20px; margin: 16px 0 14px;
+      color: #F6F1E7;
+      background:
+        radial-gradient(90% 120% at 100% 0%, rgba(217, 195, 160, .30), transparent 55%),
+        linear-gradient(150deg, #3A3733 0%, #2B2A28 60%, #1F1E1C 100%);
+      box-shadow: 0 10px 28px rgba(43, 42, 40, .22);
+    }
+    .mcard .top { display: flex; justify-content: space-between; align-items: center; }
+    .mcard .brand { font-family: var(--font-en); font-weight: 700; letter-spacing: .12em; font-size: 13px; opacity: .85; }
+    .mcard .tier { font-size: 11px; letter-spacing: .1em; color: var(--wood); }
+    .mcard .who { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+    .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #4A4640; border: 2px solid rgba(246, 241, 231, .4); flex: none; }
+    .mcard .nm { font-size: 18px; font-weight: 600; line-height: 1.2; }
+    .mcard .mid { font-size: 13px; opacity: .7; letter-spacing: .08em; }
+    .mcard .pts { margin-top: 18px; display: flex; align-items: baseline; gap: 8px; }
+    .mcard .pts b { font-family: var(--font-en); font-size: 46px; line-height: 1; }
+    .mcard .pts span { opacity: .75; }
+    .bar { height: 8px; border-radius: 999px; background: rgba(246, 241, 231, .16); overflow: hidden; margin-top: 12px; }
+    .bar i { display: block; height: 100%; background: var(--wood); border-radius: 999px; transition: width .5s; }
+    .mcard .next { font-size: 13px; opacity: .8; margin-top: 6px; }
+
+    .reward { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+    .card-title + .reward { border-top: 0; padding-top: 0; }
+    .reward .ic { width: 44px; height: 44px; border-radius: 12px; background: var(--gold-soft); color: var(--gold); display: grid; place-items: center; flex: none; }
+    .reward .ic svg { width: 22px; height: 22px; }
+    .reward .body { flex: 1; min-width: 0; }
+    .reward .nm { font-weight: 500; }
+    .reward .bar { background: var(--line); height: 6px; margin-top: 6px; }
+    .reward .bar i { background: var(--gold); }
+    .reward .st { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .reward.ready .st { color: var(--ok); font-weight: 600; }
+
+    .qr-box { display: grid; place-items: center; padding: 6px 0 2px; }
+    #qr { background: #fff; padding: 12px; border-radius: 14px; border: 1px solid var(--line); min-height: 60px; }
+    #qr img, #qr canvas { display: block; }
+    .qr-fallback { font-family: var(--font-en); font-size: 32px; font-weight: 700; letter-spacing: .14em; padding: 10px 14px; }
+
+    .hist { list-style: none; margin: 0; padding: 0; }
+    .hist li { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+    .hist li:first-child { border-top: 0; }
+    .hist .p { font-weight: 600; white-space: nowrap; }
+    .hist .p.plus { color: var(--ok); }
+    .hist .p.minus { color: var(--danger); }
+
+    label.f { display: block; font-size: 14px; font-weight: 500; margin: 14px 0 6px; }
+    .input {
+      font: inherit; width: 100%; padding: 13px 14px; border-radius: 12px;
+      border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+    }
+    .input:focus { outline: none; border-color: var(--gold); }
+    .input.big { font-size: 26px; font-weight: 600; font-family: var(--font-en); padding: 12px 14px; }
+    .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 16px 0; color: var(--ink-2); }
+    .check input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--gold); flex: none; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+
+
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ H: พนักงาน   ⛔
+       ═══════════════════════════════════════ */
+    .staff-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--ink); color: var(--bg); }
+    .who-s { display: flex; gap: 12px; align-items: center; }
+    .who-s .avatar { border-color: var(--line); }
+    .stat3 { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; gap: 6px; margin-top: 14px; }
+    .stat3 b { display: block; font-size: 22px; font-family: var(--font-en); }
+    .stat3 span { font-size: 12px; color: var(--muted); }
+    .seg { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+    .preview {
+      background: var(--gold-soft); border-radius: 14px; padding: 12px 14px; margin: 14px 0;
+      font-size: 14.5px; min-height: 48px;
+    }
+    .preview b { font-size: 18px; }
+    .code-box { font-family: ui-monospace, monospace; font-size: 12.5px; word-break: break-all; background: var(--bg); padding: 12px; border-radius: 10px; margin: 10px 0; }
+
+    #toast {
+      position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);
+      transform: translateX(-50%) translateY(16px); z-index: 50;
+      background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 14px;
+      font-size: 15px; opacity: 0; pointer-events: none; transition: all .25s;
+      max-width: calc(100% - 32px); text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); }
+    #toast.ok { background: var(--ok); }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════ หน้าแรก ═══════════════ -->
+  <section id="view-home" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ เมนู ═══════════════ -->
+  <section id="view-menu" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ เดลิเวอรี่ ═══════════════ -->
+  <section id="view-delivery" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ บัตรสมาชิก ═══════════════ -->
+  <section id="view-reward" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ โหมดพนักงาน ═══════════════ -->
+  <section id="view-staff" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ แถบเมนูด้านล่าง ═══════════════ -->
+  <nav class="tabbar" id="tabbar">
+    <div class="inner">
+      <button class="tab" data-page="home"></button>
+      <button class="tab" data-page="menu"></button>
+      <button class="tab" data-page="reward"></button>
+      <button class="tab" data-page="delivery"></button>
+    </div>
+  </nav>
+
+  <div id="toast"></div>
+
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 1: ตั้งค่า   ✏️ แก้ได้
+// ════════════════════════════════════════════════════════════════
+
+const CONFIG = {
+
+  // URL ของ Apps Script (ลงท้าย /exec) จากขั้นที่ 1
+  API_URL: 'https://script.google.com/macros/s/AKfycbyYA6yHw18LQedaQgK_k3mxWQnBv8P9BJFVaMidV5wk3OjX7Rs_tPE_pBzn-kssvcdR/exec',
+
+  // LIFF ID จาก LINE Developers (ใส่ในขั้นที่ 3 — ตอนนี้เว้นว่างไว้)
+  LIFF_ID: '',
+
+};
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 2: ไอคอนและข้อความ   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+const ICON = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>',
+  cup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.3 11.2a2 2 0 0 1-2 1.8H9.3a2 2 0 0 1-2-1.8L6 8Z"/><path d="M5 5.5h14V8H5z"/><path d="M8.5 5.5 9 3h6l.5 2.5"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.3 4.7 5.2.8-3.8 3.6.9 5.2L12 15.4l-4.6 2.4.9-5.2L4.5 9l5.2-.8L12 3.5Z"/></svg>',
+  bike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="2.5"/><circle cx="18" cy="17" r="2.5"/><path d="M8.5 17h6l2-6h-5"/><path d="M14 7h2.5l2 7.5"/><path d="M3 11h6v3H4.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 6.5 6.5l1.5-2 4 1.5V19a1.5 1.5 0 0 1-1.5 1.5A15.5 15.5 0 0 1 3.5 5.5 1.5 1.5 0 0 1 5 4Z"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  scan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M4 12h16"/></svg>',
+  gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="4" rx="1"/><path d="M5.5 13v7h13v-7M12 9v11M12 9c-1.5-3.5-5-3.5-5-1.2C7 9 9 9 12 9Zm0 0c1.5-3.5 5-3.5 5-1.2C17 9 15 9 12 9Z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+};
+
+const TABS = [
+  { page: 'home', label: 'หน้าแรก', icon: 'home' },
+  { page: 'menu', label: 'เมนู', icon: 'cup' },
+  { page: 'reward', label: 'สะสมแต้ม', icon: 'star' },
+  { page: 'delivery', label: 'เดลิเวอรี่', icon: 'bike' },
+];
+
+const ERROR_TEXT = {
+  NETWORK: 'เชื่อมต่อไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่',
+  LINE_NOT_CONFIGURED: 'หลังบ้านยังไม่ได้ใส่ Channel ID (ขั้นที่ 3)',
+  NO_TOKEN: 'กรุณาเปิดผ่านแอป LINE',
+  INVALID_TOKEN: 'เซสชันหมดอายุ กรุณาปิดแล้วเปิดใหม่',
+  NOT_STAFF: 'บัญชีนี้ไม่มีสิทธิ์พนักงาน',
+  MEMBER_NOT_FOUND: 'ไม่พบสมาชิก',
+  INVALID_PHONE: 'เบอร์โทรไม่ถูกต้อง',
+  INVALID_NAME: 'กรุณากรอกชื่อเล่น',
+  PHONE_TAKEN: 'เบอร์นี้สมัครสมาชิกแล้ว',
+  NO_CONSENT: 'กรุณากดยินยอมก่อนสมัคร',
+  INVALID_SERVICE: 'บริการนี้ยังไม่เปิดใช้',
+  INVALID_AMOUNT: 'ยอดเงินไม่ถูกต้อง',
+  RECEIPT_REQUIRED: 'กรุณากรอกเลขใบเสร็จ',
+  RECEIPT_USED: 'ใบเสร็จนี้ให้แต้มไปแล้ว',
+  INVALID_REWARD: 'รางวัลนี้ปิดใช้แล้ว',
+  NOT_ENOUGH_POINTS: 'แต้มไม่พอ',
+  BUSY: 'ระบบกำลังทำงาน ลองใหม่อีกครั้ง',
+  SHEET_NOT_READY: 'หลังบ้านยังไม่พร้อม (ยังไม่ได้สร้างชีต)',
+  MISSING_COLUMN: 'หัวคอลัมน์ใน Sheet ถูกเปลี่ยนชื่อ',
+  SERVER_ERROR: 'ระบบหลังบ้านมีปัญหา',
+};
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 3: เครื่องมือทั่วไป   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+const state = {
+  page: 'home',
+  data: null,          // ข้อมูลร้าน / เมนู / รางวัล
+  dataKey: '',
+  liffReady: false,
+  me: null,            // ข้อมูลสมาชิกของฉัน
+  staffMember: null,   // สมาชิกที่พนักงานกำลังดู
+  staffService: null,
+};
+let liffPromise = Promise.resolve(false);
+
+const $ = (sel) => document.querySelector(sel);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (v) => { const n = Number(v); return isFinite(n) ? n : 0; };
+const round4 = (n) => Math.round(n * 10000) / 10000;
+const baht = (n) => num(n).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+
+function priceText(p) {
+  if (p === '' || p == null) return '';
+  const s = String(p).trim();
+  return /^\d+(\.\d+)?$/.test(s) ? '฿' + baht(s) : esc(s);
+}
+
+function errText(e) {
+  return ERROR_TEXT[e && e.message] || 'เกิดข้อผิดพลาด (' + esc(e && e.message) + ')';
+}
+
+let toastTimer;
+function toast(msg, type) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'show ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = ''), 2800);
+}
+
+function store(op, key, val) {
+  try {
+    if (op === 'get') return JSON.parse(localStorage.getItem(key) || 'null');
+    if (op === 'set') localStorage.setItem(key, JSON.stringify(val));
+  } catch (e) { /* เบราว์เซอร์ปิด storage — ใช้งานต่อได้ปกติ */ }
+  return null;
+}
+function session(op, key, val) {
+  try {
+    if (op === 'get') return sessionStorage.getItem(key);
+    if (op === 'set') sessionStorage.setItem(key, val);
+    if (op === 'del') sessionStorage.removeItem(key);
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+function placeholder() { return '<div class="ph">' + ICON.cup + '</div>'; }
+
+function imgTag(url, alt) {
+  if (!url) return placeholder();
+  return '<img src="' + esc(url) + '" alt="' + esc(alt) + '" loading="lazy" onerror="this.outerHTML=placeholder()">';
+}
+
+function openLink(url) {
+  if (!url) return;
+  if (state.liffReady && liff.isInClient()) liff.openWindow({ url: url, external: true });
+  else window.open(url, '_blank', 'noopener');
+}
+
+function spinner() { return '<div class="spinner"></div>'; }
+
+function formatDate(v, withTime) {
+  const d = new Date(v);
+  if (!v || isNaN(d)) return '';
+  const o = { day: 'numeric', month: 'short', year: '2-digit' };
+  if (withTime) { o.hour = '2-digit'; o.minute = '2-digit'; }
+  return d.toLocaleString('th-TH', o);
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 4: โหลดข้อมูลร้าน / เมนู จากหลังบ้าน   ⛔ ไม่ต้องแก้
+//  (แสดงข้อมูลที่เคยโหลดไว้ทันที แล้วค่อยอัปเดตเป็นข้อมูลล่าสุด)
+// ════════════════════════════════════════════════════════════════
+
+const CACHE_KEY = 'app2325:public:' + CONFIG.API_URL.slice(-12);
+
+async function loadPublic() {
+  const cached = store('get', CACHE_KEY);
+  if (cached && !state.data) setData(cached);
+
+  try {
+    const res = await fetch(CONFIG.API_URL + '?action=public', { cache: 'no-store' });
+    const d = await res.json();
+    if (!d.ok) throw new Error(d.error || 'SERVER_ERROR');
+    store('set', CACHE_KEY, d);
+    setData(d);
+  } catch (e) {
+    console.error(e);
+    if (!state.data) renderPublicError(e.message === 'Failed to fetch' ? new Error('NETWORK') : e);
+    else if (!cached) toast('อัปเดตข้อมูลไม่สำเร็จ', 'error');
+  }
+}
+
+function setData(d) {
+  const key = JSON.stringify([d.shop, d.menu, d.rewards, d.services]);
+  if (key === state.dataKey) return; // ไม่มีอะไรเปลี่ยน
+  state.dataKey = key;
+  state.data = d;
+  document.title = d.shop.shopName || '2325 CAFE';
+  renderHome();
+  renderMenu();
+  renderDelivery();
+  if (state.page === 'reward' && state.me) renderMember();
+  if ($('#staff-shop')) $('#staff-shop').textContent = d.shop.shopName;
+  if (state.page === 'staff' && state.staffMember) renderStaffMember();
+}
+
+function renderPublicError(e) {
+  const html = '<div class="card center" style="margin-top:24px">' +
+    '<p style="font-size:34px">☕</p><p class="card-title">โหลดข้อมูลไม่สำเร็จ</p>' +
+    '<p class="muted small" style="margin-bottom:14px">' + errText(e) + '</p>' +
+    '<button class="btn" onclick="location.reload()">ลองใหม่</button></div>';
+  ['home', 'menu', 'delivery'].forEach((p) => ($('#view-' + p).innerHTML = html));
+}
+
+function renderLoading() {
+  $('#view-home').innerHTML =
+    '<div class="skeleton" style="height:220px;margin:16px 0 14px;border-radius:22px"></div>' +
+    '<div class="quick">' + '<div class="skeleton" style="height:84px"></div>'.repeat(3) + '</div>' +
+    '<div class="skeleton" style="height:160px"></div>';
+  $('#view-menu').innerHTML = '<div class="page-head"><p class="en">Our Menu</p><h1>เมนู</h1></div>' +
+    '<div class="skeleton" style="height:76px;margin-bottom:12px"></div>'.repeat(5);
+  $('#view-delivery').innerHTML = '<div class="page-head"><p class="en">Delivery</p><h1>เดลิเวอรี่</h1></div>' +
+    '<div class="skeleton" style="height:88px;margin-bottom:12px"></div>'.repeat(2);
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 5: เปลี่ยนหน้า   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+const PAGES = ['home', 'menu', 'delivery', 'reward', 'staff'];
+
+/** อ่านหน้าที่ต้องเปิดจาก ?page=... (รองรับตอน LINE ส่งมาเป็น liff.state) */
+function initialPage() {
+  const q = new URLSearchParams(location.search);
+  let p = q.get('page');
+  const st = q.get('liff.state');
+  if (!p && st) {
+    const s = st.indexOf('?') >= 0 ? st.slice(st.indexOf('?') + 1) : st;
+    p = new URLSearchParams(s).get('page');
+  }
+  return PAGES.includes(p) ? p : 'home';
+}
+
+function go(page, fromUser) {
+  if (!PAGES.includes(page)) page = 'home';
+  state.page = page;
+  document.querySelectorAll('.view').forEach((v) => (v.hidden = v.id !== 'view-' + page));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.page === page));
+  const staff = page === 'staff';
+  $('#tabbar').hidden = staff;
+  document.body.classList.toggle('no-tabbar', staff);
+  window.scrollTo(0, 0);
+
+  // จำหน้าปัจจุบันไว้ใน URL (เฉพาะตอนผู้ใช้กดเปลี่ยนหน้าเอง)
+  if (fromUser) {
+    try { history.replaceState(null, '', location.pathname + '?page=' + page); } catch (e) { /* ignore */ }
+  }
+  if (page === 'reward') openReward();
+  if (page === 'staff') openStaff();
+}
+
+function buildTabbar() {
+  document.querySelectorAll('.tab').forEach((btn) => {
+    const t = TABS.find((x) => x.page === btn.dataset.page);
+    btn.innerHTML = ICON[t.icon] + '<span>' + t.label + '</span>';
+    btn.addEventListener('click', () => go(t.page, true));
+  });
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 6: หน้าแรก   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+function renderHome() {
+  const s = state.data.shop;
+  let h = '';
+
+  // ภาพปก
+  h += '<div class="hero">' +
+    (s.coverImage ? '<img class="cover" src="' + esc(s.coverImage) + '" alt="" onerror="this.remove()">' : '') +
+    '<div class="txt">' +
+    (s.logoImage ? '<img class="logo" src="' + esc(s.logoImage) + '" alt="" onerror="this.remove()">' : '') +
+    '<div class="name">' + esc(s.shopName) + '</div>' +
+    (s.tagline ? '<div class="tagline">' + esc(s.tagline) + '</div>' : '') +
+    '</div></div>';
+
+  // ประกาศ
+  if (s.announcement) h += '<div class="notice">' + ICON.info + '<div>' + esc(s.announcement) + '</div></div>';
+
+  // ปุ่มลัด
+  h += '<div class="quick">' +
+    '<a href="#" data-go="menu">' + ICON.cup + 'เมนู</a>' +
+    '<a href="#" data-go="reward">' + ICON.star + 'สะสมแต้ม</a>' +
+    '<a href="#" data-go="delivery">' + ICON.bike + 'เดลิเวอรี่</a>' +
+    '</div>';
+
+  // ข้อมูลร้าน
+  const rows = [];
+  if (s.openHours) rows.push(infoRow('clock', 'เวลาเปิด-ปิด', s.openHours));
+  if (s.closedNote) rows.push(infoRow('calendar', 'วันหยุด', s.closedNote));
+  if (s.address || s.mapUrl) {
+    rows.push(infoRow('pin', 'ที่อยู่', s.address || 'ดูแผนที่',
+      s.mapUrl ? '<button class="pill" data-link="' + esc(s.mapUrl) + '">นำทาง</button>' : ''));
+  }
+  if (s.phone) {
+    rows.push(infoRow('phone', 'โทร', s.phone,
+      '<a class="pill" href="tel:' + esc(s.phone.replace(/[^\d+]/g, '')) + '">โทรเลย</a>'));
+  }
+  const social = [];
+  if (s.facebookUrl) social.push('<button class="pill" data-link="' + esc(s.facebookUrl) + '">Facebook</button>');
+  if (s.instagramUrl) social.push('<button class="pill" data-link="' + esc(s.instagramUrl) + '">Instagram</button>');
+  if (social.length) rows.push(infoRow('link', 'ติดตามเรา', '', '', '<div class="social">' + social.join('') + '</div>'));
+
+  if (rows.length) h += '<div class="card">' + rows.join('') + '</div>';
+
+  $('#view-home').innerHTML = h;
+}
+
+function infoRow(icon, label, value, action, extra) {
+  return '<div class="info-row">' + ICON[icon] +
+    '<div><div class="lbl">' + esc(label) + '</div>' +
+    (value ? '<div class="val">' + esc(value) + '</div>' : '') + (extra || '') + '</div>' +
+    (action ? '<div class="act">' + action + '</div>' : '') + '</div>';
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 7: หน้าเมนู   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+function renderMenu() {
+  const groups = state.data.menu || [];
+  let h = '<div class="page-head"><p class="en">Our Menu</p><h1>เมนู</h1></div>';
+
+  if (!groups.length) {
+    $('#view-menu').innerHTML = h + '<div class="card center muted">ยังไม่มีเมนู</div>';
+    return;
+  }
+
+  // แถบหมวด
+  h += '<div class="chips" id="chips">' +
+    groups.map((g, i) => '<button class="chip' + (i === 0 ? ' active' : '') + '" data-cat="' + i + '">' + esc(g.category) + '</button>').join('') +
+    '</div>';
+
+  // เมนูแนะนำ
+  const reco = [];
+  groups.forEach((g) => g.items.forEach((it) => { if (it.recommended && !it.soldOut) reco.push(it); }));
+  if (reco.length) {
+    h += '<div class="cat-title"><h2>เมนูแนะนำ</h2><span class="en">Recommended</span></div>' +
+      '<div class="reco">' + reco.map((it) =>
+        '<div class="item">' + imgTag(it.image, it.name) +
+        '<div class="nm">' + esc(it.name) + '</div>' +
+        '<div class="muted small">' + priceText(it.price) + '</div></div>').join('') + '</div>';
+  }
+
+  // รายการตามหมวด
+  groups.forEach((g, i) => {
+    h += '<div class="cat-title" id="cat-' + i + '"><h2>' + esc(g.category) + '</h2><span>' + g.items.length + ' รายการ</span></div>';
+    h += '<div class="card" style="padding:4px 16px">' + g.items.map(menuItem).join('') + '</div>';
+  });
+
+  $('#view-menu').innerHTML = h;
+
+  document.querySelectorAll('#chips .chip').forEach((c) => {
+    c.addEventListener('click', () => {
+      const el = document.getElementById('cat-' + c.dataset.cat);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  watchCategories(groups.length);
+}
+
+function menuItem(it) {
+  return '<div class="mitem' + (it.soldOut ? ' sold' : '') + '">' +
+    imgTag(it.image, it.name) +
+    '<div class="body">' +
+    '<div class="nm">' + esc(it.name) +
+    (it.recommended && !it.soldOut ? '<span class="badge reco-b">แนะนำ</span>' : '') +
+    (it.soldOut ? '<span class="badge sold-b">หมด</span>' : '') + '</div>' +
+    (it.nameEn ? '<div class="en-nm">' + esc(it.nameEn) + '</div>' : '') +
+    (it.description ? '<div class="desc">' + esc(it.description) + '</div>' : '') +
+    '</div>' +
+    '<div class="price">' + priceText(it.price) + '</div>' +
+    '</div>';
+}
+
+/** ไฮไลต์หมวดที่กำลังเลื่อนดูอยู่ */
+let catObserver;
+function watchCategories(n) {
+  if (catObserver) catObserver.disconnect();
+  if (!('IntersectionObserver' in window)) return;
+  catObserver = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      const i = en.target.id.replace('cat-', '');
+      document.querySelectorAll('#chips .chip').forEach((c) => c.classList.toggle('active', c.dataset.cat === i));
+      const act = document.querySelector('#chips .chip.active');
+      if (act) act.scrollIntoView({ block: 'nearest', inline: 'center' });
+    });
+  }, { rootMargin: '-70px 0px -70% 0px' });
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById('cat-' + i);
+    if (el) catObserver.observe(el);
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 8: หน้าเดลิเวอรี่   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+function renderDelivery() {
+  const s = state.data.shop;
+  const card = (name, sub, url, color) =>
+    '<button class="dcard" ' + (url ? 'data-link="' + esc(url) + '"' : 'disabled') + '>' +
+    '<div class="ic" style="background:' + color + '">' + ICON.bike + '</div>' +
+    '<div><div class="t">' + name + '</div><div class="s">' + (url ? sub : 'เร็วๆ นี้') + '</div></div>' +
+    '<div class="arr">' + (url ? ICON.arrow : '') + '</div></button>';
+
+  $('#view-delivery').innerHTML =
+    '<div class="page-head"><p class="en">Delivery</p><h1>สั่งกลับบ้าน</h1></div>' +
+    '<p class="muted" style="margin-bottom:16px">เลือกแอปที่สะดวก ระบบจะพาไปที่ร้านของเราในแอปนั้น</p>' +
+    card('GrabFood', 'สั่งผ่านแอป Grab', s.grabUrl, '#2B2A28') +
+    card('LINE MAN', 'สั่งผ่านแอป LINE MAN', s.linemanUrl, '#B8894A') +
+    '<p class="muted small center" style="margin-top:18px">สะสมแต้มได้เฉพาะการซื้อที่หน้าร้าน</p>';
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 9: เชื่อม LINE (LIFF)   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+async function initLiff() {
+  if (!CONFIG.LIFF_ID || typeof liff === 'undefined') return false;
+  try {
+    await liff.init({ liffId: CONFIG.LIFF_ID });
+    state.liffReady = true;
+    return true;
+  } catch (e) {
+    console.error('liff.init', e);
+    return false;
+  }
+}
+
+/** ต้องล็อกอิน LINE ก่อน (หน้าสมาชิก / พนักงาน) */
+async function requireLogin(page) {
+  const ok = await liffPromise;
+  if (!ok) throw new Error('LIFF_FAILED');
+  if (!liff.isLoggedIn()) {
+    liff.login({ redirectUri: location.origin + location.pathname + '?page=' + page });
+    throw new Error('REDIRECTING');
+  }
+}
+
+/** เรียก API ที่ต้องยืนยันตัวตน */
+async function api(action, data) {
+  let out;
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // กัน CORS preflight
+      body: JSON.stringify(Object.assign({ action: action, idToken: liff.getIDToken() }, data || {})),
+    });
+    out = await res.json();
+  } catch (e) {
+    throw new Error('NETWORK');
+  }
+  if (!out.ok) {
+    // token หมดอายุ → ล็อกอินใหม่ 1 ครั้ง
+    if (out.error === 'INVALID_TOKEN' && !session('get', 'relogin')) {
+      session('set', 'relogin', '1');
+      liff.logout();
+      liff.login({ redirectUri: location.origin + location.pathname + '?page=' + state.page });
+      throw new Error('REDIRECTING');
+    }
+    throw new Error(out.error || 'SERVER_ERROR');
+  }
+  session('del', 'relogin');
+  return out;
+}
+
+function notReadyHtml(title) {
+  return '<div class="page-head"><p class="en">Member</p><h1>' + title + '</h1></div>' +
+    '<div class="card center"><p style="font-size:34px">⭐</p>' +
+    '<p class="card-title">เปิดให้บริการเร็วๆ นี้</p>' +
+    '<p class="muted small">ระบบสมาชิกใช้งานได้เมื่อเปิดผ่านแอป LINE ของร้าน</p></div>';
+}
+
+function pageError(el, e, retry) {
+  if (e.message === 'REDIRECTING') return;
+  el.innerHTML = '<div class="card center" style="margin-top:24px"><p class="card-title">เกิดข้อผิดพลาด</p>' +
+    '<p class="muted small" style="margin-bottom:14px">' +
+    (e.message === 'LIFF_FAILED' ? 'เชื่อมต่อ LINE ไม่สำเร็จ ตรวจสอบ LIFF ID' : errText(e)) + '</p>' +
+    '<button class="btn" id="btn-retry">ลองใหม่</button></div>';
+  $('#btn-retry').onclick = retry;
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 10: บัตรสมาชิก (ลูกค้า)   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+async function openReward(force) {
+  const el = $('#view-reward');
+  if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('สะสมแต้ม'); return; }
+  if (state.me && !force) { renderMember(); return; }
+  el.innerHTML = '<div class="page-head"><p class="en">Member</p><h1>สะสมแต้ม</h1></div>' + spinner();
+  try {
+    await requireLogin('reward');
+    state.me = await api('me');
+    renderMember();
+  } catch (e) {
+    pageError(el, e, () => openReward(true));
+  }
+}
+
+function renderMember() {
+  if (!state.me || state.page !== 'reward') return;
+  if (!state.me.member) renderRegister();
+  else renderCard(state.me.member);
+}
+
+// ---------- สมัครสมาชิก ----------
+function renderRegister() {
+  const d = state.data;
+  const svc = d && (d.services || []).find((s) => s.earnType === 'ตามยอดเงิน');
+  const r = d && d.rewards && d.rewards[0];
+  const intro = svc && r
+    ? 'ทุกยอด ' + baht(svc.earnValue) + ' บาท รับ 1 แต้ม · ครบ ' + r.points + ' แต้ม แลก' + r.name
+    : 'สะสมแต้มแลกของรางวัลที่ร้าน';
+
+  $('#view-reward').innerHTML =
+    '<div class="page-head"><p class="en">Join Member</p><h1>สมัครสมาชิก</h1></div>' +
+    '<div class="notice">' + ICON.star + '<div>' + esc(intro) + '</div></div>' +
+    '<form class="card" id="f-reg" novalidate>' +
+    '<label class="f" for="r-name" style="margin-top:0">ชื่อเล่น</label>' +
+    '<input class="input" id="r-name" maxlength="40" autocomplete="nickname" value="' + esc(state.me.profile.name) + '">' +
+    '<label class="f" for="r-phone">เบอร์โทรศัพท์</label>' +
+    '<input class="input" id="r-phone" type="tel" inputmode="numeric" maxlength="12" placeholder="08x-xxx-xxxx" autocomplete="tel">' +
+    '<label class="f" for="r-bd">วันเกิด <span class="muted small">(ไม่บังคับ · รับสิทธิพิเศษเดือนเกิด)</span></label>' +
+    '<input class="input" id="r-bd" type="date">' +
+    '<label class="check"><input type="checkbox" id="r-ok"><span>ยินยอมให้ร้านเก็บชื่อ เบอร์โทร และวันเกิด เพื่อใช้กับระบบสมาชิกและแจ้งสิทธิประโยชน์เท่านั้น</span></label>' +
+    '<button class="btn gold" id="r-btn" type="submit">สมัครสมาชิก</button>' +
+    '</form>';
+
+  $('#f-reg').onsubmit = async (ev) => {
+    ev.preventDefault();
+    const name = $('#r-name').value.trim();
+    const phone = $('#r-phone').value.replace(/\D/g, '');
+    if (!name) return toast('กรุณากรอกชื่อเล่น', 'error');
+    if (!/^0\d{8,9}$/.test(phone)) return toast('เบอร์โทรไม่ถูกต้อง', 'error');
+    if (!$('#r-ok').checked) return toast('กรุณากดยินยอมก่อนสมัคร', 'error');
+    const btn = $('#r-btn');
+    btn.disabled = true; btn.textContent = 'กำลังสมัคร…';
+    try {
+      const out = await api('register', { nickname: name, phone: phone, birthday: $('#r-bd').value, consent: true });
+      state.me.member = out.member;
+      toast('สมัครสมาชิกเรียบร้อย 🎉', 'ok');
+      renderCard(out.member);
+    } catch (e) {
+      if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+      btn.disabled = false; btn.textContent = 'สมัครสมาชิก';
+    }
+  };
+}
+
+// ---------- บัตรสมาชิก ----------
+function renderCard(m) {
+  const d = state.data || { shop: {}, rewards: [] };
+  const rewards = d.rewards || [];
+  let h = '';
+
+  // บัตร
+  const partialPct = Math.round(num(m.partial) * 100);
+  h += '<div class="mcard">' +
+    '<div class="top"><span class="brand">' + esc(d.shop.shopName || '2325 CAFE') + '</span><span class="tier en">Member</span></div>' +
+    '<div class="who">' +
+    (m.pictureUrl ? '<img class="avatar" src="' + esc(m.pictureUrl) + '" alt="">' : '<div class="avatar"></div>') +
+    '<div><div class="nm">' + esc(m.displayName) + '</div><div class="mid">' + fmtId(m.memberId) + '</div></div></div>' +
+    '<div class="pts"><b>' + m.points + '</b><span>แต้ม</span></div>' +
+    (m.nextPointBaht != null
+      ? '<div class="bar"><i style="width:' + partialPct + '%"></i></div>' +
+        '<div class="next">อีก ' + baht(m.nextPointBaht) + ' บาท รับแต้มถัดไป</div>'
+      : '') +
+    '</div>';
+
+  // รางวัล
+  if (rewards.length) {
+    h += '<div class="card"><div class="card-title">ของรางวัล</div>' + rewards.map((r) => {
+      const ready = m.points >= r.points;
+      const pct = Math.min(100, Math.round((m.points / r.points) * 100));
+      return '<div class="reward' + (ready ? ' ready' : '') + '">' +
+        '<div class="ic">' + ICON.gift + '</div>' +
+        '<div class="body"><div class="nm">' + esc(r.name) + '</div>' +
+        '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="st">' + (ready ? 'แลกได้แล้ว! แจ้งพนักงานที่ร้าน' : 'อีก ' + (r.points - m.points) + ' แต้ม') + '</div></div>' +
+        '<div class="muted small" style="flex:none">' + r.points + ' แต้ม</div></div>';
+    }).join('') + '</div>';
+  }
+
+  // QR
+  h += '<div class="card center"><div class="card-title">แสดง QR ให้พนักงานเมื่อชำระเงิน</div>' +
+    '<div class="qr-box"><div id="qr"></div></div>' +
+    '<p class="muted small" style="margin-top:10px">หรือแจ้งรหัสสมาชิก ' + fmtId(m.memberId) + ' / เบอร์โทร</p></div>';
+
+  // สถิติ + ประวัติ
+  h += '<div class="card"><div class="stat3">' +
+    '<div><b>' + m.lifetimePoints + '</b><span>แต้มสะสมทั้งหมด</span></div>' +
+    '<div><b>' + m.visits + '</b><span>ครั้งที่มาร้าน</span></div>' +
+    '<div><b>' + m.redeemCount + '</b><span>แลกรางวัล</span></div></div>' +
+    '<div id="hist" style="margin-top:14px"><button class="btn line" id="btn-hist">ดูประวัติแต้ม</button></div></div>';
+
+  if (d.shop.memberNote) h += '<p class="muted small center" style="margin:4px 8px 14px">' + esc(d.shop.memberNote) + '</p>';
+  h += '<button class="btn soft" id="btn-refresh">อัปเดตแต้ม</button>';
+
+  $('#view-reward').innerHTML = h;
+  drawQr(m.memberId);
+  $('#btn-hist').onclick = loadHistory;
+  $('#btn-refresh').onclick = () => refreshMe(true);
+}
+
+function fmtId(id) { return esc(String(id).replace(/^(\d{3})(\d{3})$/, '$1 $2')); }
+
+function drawQr(text) {
+  const box = $('#qr');
+  if (!box) return;
+  box.innerHTML = '';
+  try {
+    new QRCode(box, { text: String(text), width: 176, height: 176, colorDark: '#2B2A28', correctLevel: QRCode.CorrectLevel.M });
+  } catch (e) {
+    box.innerHTML = '<div class="qr-fallback">' + fmtId(text) + '</div>'; // โหลดตัวสร้าง QR ไม่ได้ → แสดงรหัสแทน
+  }
+}
+
+async function loadHistory() {
+  const box = $('#hist');
+  box.innerHTML = spinner();
+  try {
+    const out = await api('myHistory');
+    box.innerHTML = out.recent.length ? histList(out.recent) : '<p class="muted small center">ยังไม่มีประวัติ</p>';
+  } catch (e) {
+    if (e.message !== 'REDIRECTING') box.innerHTML = '<p class="muted small center">' + errText(e) + '</p>';
+  }
+}
+
+function histList(list) {
+  return '<ul class="hist">' + list.map((t) => {
+    const title = t.type === 'แลกรางวัล' ? 'แลก ' + esc(t.reward)
+      : esc(t.service || 'ได้แต้ม') + (t.amount ? ' · ' + baht(t.amount) + ' บาท' : '');
+    const cls = t.points > 0 ? 'plus' : t.points < 0 ? 'minus' : '';
+    return '<li><div><div>' + title + '</div><div class="muted small">' + formatDate(t.time, true) + '</div></div>' +
+      '<div class="p ' + cls + '">' + (t.points > 0 ? '+' : '') + t.points + '</div></li>';
+  }).join('') + '</ul>';
+}
+
+async function refreshMe(showToast) {
+  const btn = $('#btn-refresh');
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังอัปเดต…'; }
+  try {
+    state.me = await api('me');
+    renderMember();
+    if (showToast) toast('อัปเดตแล้ว', 'ok');
+  } catch (e) {
+    if (showToast && e.message !== 'REDIRECTING') toast(errText(e), 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'อัปเดตแต้ม'; }
+  }
+}
+
+// กลับมาที่แอป (เช่น หลังพนักงานให้แต้ม) → อัปเดตเอง
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.page === 'reward' && state.me && state.me.member) refreshMe(false);
+});
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 11: โหมดพนักงาน   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+async function openStaff() {
+  const el = $('#view-staff');
+  if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('โหมดพนักงาน'); return; }
+  el.innerHTML = '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span></div>' + spinner();
+  try {
+    await requireLogin('staff');
+    state.me = await api('me');
+    if (!state.me.isStaff) return renderNotStaff();
+    renderStaffHome();
+  } catch (e) {
+    pageError(el, e, openStaff);
+  }
+}
+
+function renderNotStaff() {
+  $('#view-staff').innerHTML =
+    '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span><h1 style="margin-top:10px">ยังไม่มีสิทธิ์</h1></div>' +
+    '<div class="card"><p>ส่งรหัสด้านล่างให้เจ้าของร้าน เพื่อเพิ่มในแท็บ <b>พนักงาน</b></p>' +
+    '<div class="code-box" id="uid">' + esc(state.me.profile.userId) + '</div>' +
+    '<button class="btn soft" id="btn-copy">คัดลอกรหัส</button></div>' +
+    '<button class="btn ghost" onclick="openStaff()">เพิ่มสิทธิ์แล้ว · โหลดใหม่</button>';
+  $('#btn-copy').onclick = async () => {
+    try { await navigator.clipboard.writeText(state.me.profile.userId); toast('คัดลอกแล้ว', 'ok'); }
+    catch (e) {
+      const r = document.createRange(); r.selectNodeContents($('#uid'));
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      toast('กดค้างที่รหัสเพื่อคัดลอก');
+    }
+  };
+}
+
+function renderStaffHome() {
+  const shop = state.data ? state.data.shop.shopName : '';
+  $('#view-staff').innerHTML =
+    '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span>' +
+    '<h1 style="margin-top:10px" id="staff-shop">' + esc(shop) + '</h1>' +
+    '<p class="muted small">ผู้ใช้งาน: ' + esc(state.me.staffName) + '</p></div>' +
+    '<div class="card">' +
+    '<button class="btn gold" id="btn-scan">' + ICON.scan + 'สแกน QR ลูกค้า</button>' +
+    '<form id="f-find" style="margin-top:12px"><div class="row">' +
+    '<input class="input" id="q" type="tel" inputmode="numeric" maxlength="12" placeholder="รหัสสมาชิก / เบอร์โทร" style="flex:2">' +
+    '<button class="btn soft" type="submit" style="flex:1">ค้นหา</button></div></form></div>' +
+    '<div id="s-member"></div>';
+
+  $('#btn-scan').onclick = scanQr;
+  $('#f-find').onsubmit = (ev) => { ev.preventDefault(); const q = $('#q').value.trim(); if (q) lookup(q); };
+}
+
+async function scanQr() {
+  if (!state.liffReady || !liff.isApiAvailable('scanCodeV2')) {
+    toast('สแกนได้ในแอป LINE บนมือถือ · พิมพ์รหัสแทนได้', 'error');
+    return;
+  }
+  try {
+    const r = await liff.scanCodeV2();
+    if (r && r.value) lookup(r.value);
+  } catch (e) {
+    toast('สแกนไม่สำเร็จ ลองใหม่อีกครั้ง', 'error');
+  }
+}
+
+async function lookup(q) {
+  const box = $('#s-member');
+  box.innerHTML = spinner();
+  try {
+    const out = await api('staffLookup', { query: q });
+    state.staffMember = out.member;
+    state.staffRecent = out.recent;
+    renderStaffMember();
+  } catch (e) {
+    box.innerHTML = '';
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+  }
+}
+
+function renderStaffMember() {
+  const m = state.staffMember;
+  if (!m) return;
+  const services = (state.data && state.data.services) || [];
+  const rewards = (state.data && state.data.rewards) || [];
+  if (!state.staffService || !services.find((s) => s.id === state.staffService)) {
+    state.staffService = services.length ? services[0].id : null;
+  }
+  const thisMonth = new Date().getMonth() + 1;
+
+  let h = '<div class="card">' +
+    '<div class="who-s">' +
+    (m.pictureUrl ? '<img class="avatar" src="' + esc(m.pictureUrl) + '" alt="">' : '<div class="avatar"></div>') +
+    '<div><div style="font-weight:600;font-size:18px">' + esc(m.displayName) + '</div>' +
+    '<div class="muted small">' + fmtId(m.memberId) + ' · ' + esc(m.phoneMasked) + '</div>' +
+    (m.birthdayMonth === thisMonth ? '<div class="small" style="color:var(--gold);font-weight:600">🎂 เดือนเกิดของลูกค้า</div>' : '') +
+    '</div></div>' +
+    '<div class="stat3"><div><b>' + m.points + '</b><span>แต้มคงเหลือ</span></div>' +
+    '<div><b>' + m.visits + '</b><span>ครั้งที่มา</span></div>' +
+    '<div><b>' + (m.nextPointBaht != null ? baht(m.nextPointBaht) : '-') + '</b><span>บาท ถึงแต้มถัดไป</span></div></div></div>';
+
+  // ให้แต้ม
+  h += '<div class="card"><div class="card-title">ให้แต้ม</div>';
+  if (!services.length) {
+    h += '<p class="muted small">ยังไม่มีบริการที่เปิดใช้ในแท็บ "บริการ"</p>';
+  } else {
+    if (services.length > 1) {
+      h += '<div class="seg">' + services.map((s) =>
+        '<button class="chip' + (s.id === state.staffService ? ' active' : '') + '" data-svc="' + esc(s.id) + '">' + esc(s.name) + '</button>').join('') + '</div>';
+    }
+    const svc = services.find((s) => s.id === state.staffService);
+    const byAmount = svc.earnType === 'ตามยอดเงิน';
+    h += '<form id="f-earn" novalidate>' +
+      '<label class="f" for="amt">' + (byAmount ? 'ยอดบิล (บาท)' : 'ยอดบิล (บาท) <span class="muted small">ไม่บังคับ</span>') + '</label>' +
+      '<input class="input big" id="amt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0">' +
+      '<label class="f" for="rcp">เลขที่ใบเสร็จ POS' + (byAmount ? '' : ' <span class="muted small">ไม่บังคับ</span>') + '</label>' +
+      '<input class="input" id="rcp" maxlength="40" autocomplete="off" placeholder="เช่น R-000123">' +
+      '<div class="preview" id="pv"></div>' +
+      '<button class="btn" id="btn-earn" type="submit" disabled>ยืนยันให้แต้ม</button></form>';
+  }
+  h += '</div>';
+
+  // แลกรางวัล
+  if (rewards.length) {
+    h += '<div class="card"><div class="card-title">แลกรางวัล</div>' + rewards.map((r) => {
+      const ok = m.points >= r.points;
+      return '<div class="reward' + (ok ? ' ready' : '') + '"><div class="ic">' + ICON.gift + '</div>' +
+        '<div class="body"><div class="nm">' + esc(r.name) + '</div><div class="st">ใช้ ' + r.points + ' แต้ม</div></div>' +
+        '<button class="pill" data-redeem="' + esc(r.id) + '"' + (ok ? '' : ' disabled style="opacity:.4"') + '>แลก</button></div>';
+    }).join('') + '</div>';
+  }
+
+  // ประวัติล่าสุด
+  if (state.staffRecent && state.staffRecent.length) {
+    h += '<div class="card"><div class="card-title">ล่าสุด</div>' + histList(state.staffRecent) + '</div>';
+  }
+  h += '<button class="btn ghost" id="btn-next">ลูกค้าคนถัดไป</button>';
+
+  const box = $('#s-member');
+  box.innerHTML = h;
+
+  box.querySelectorAll('[data-svc]').forEach((b) => (b.onclick = () => { state.staffService = b.dataset.svc; renderStaffMember(); }));
+  box.querySelectorAll('[data-redeem]').forEach((b) => (b.onclick = () => redeem(b.dataset.redeem)));
+  $('#btn-next').onclick = () => { state.staffMember = null; box.innerHTML = ''; $('#q').value = ''; window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+  const form = $('#f-earn');
+  if (form) {
+    $('#amt').oninput = updatePreview;
+    $('#rcp').oninput = updatePreview;
+    form.onsubmit = (ev) => { ev.preventDefault(); earn(); };
+    updatePreview();
+  }
+}
+
+/** คำนวณแต้มล่วงหน้าให้พนักงานตรวจก่อนกดยืนยัน (สูตรเดียวกับหลังบ้าน) */
+function calcPreview() {
+  const m = state.staffMember;
+  const svc = state.data.services.find((s) => s.id === state.staffService);
+  const amount = Math.round(num($('#amt').value) * 100) / 100;
+  const receipt = $('#rcp').value.trim();
+  if (svc.earnType === 'ตามยอดเงิน') {
+    if (!(amount > 0)) return { ok: false, text: 'กรอกยอดบิลเพื่อคำนวณแต้ม' };
+    const rate = Math.max(1, num(svc.earnValue));
+    const raw = round4(num(m.partial) + amount / rate);
+    const pts = Math.floor(raw + 1e-9);
+    const left = round4(raw - pts);
+    const next = Math.max(1, Math.ceil(round4((1 - left) * rate)));
+    return {
+      ok: !!receipt, points: pts, amount: amount,
+      text: '<b>+' + pts + ' แต้ม</b> จากยอด ' + baht(amount) + ' บาท' +
+        (num(m.partial) > 0 ? ' (รวมเศษเดิม ' + baht(Math.round(num(m.partial) * rate)) + ' บาท)' : '') +
+        '<br><span class="muted small">หลังให้แต้ม: อีก ' + baht(next) + ' บาท ได้แต้มถัดไป' +
+        (receipt ? '' : ' · <b style="color:var(--danger)">กรอกเลขใบเสร็จ</b>') + '</span>',
+    };
+  }
+  const pts = Math.max(0, Math.floor(num(svc.earnValue)));
+  return { ok: true, points: pts, amount: amount, text: '<b>+' + pts + ' แต้ม</b> จาก ' + esc(svc.name) };
+}
+
+function updatePreview() {
+  const p = calcPreview();
+  $('#pv').innerHTML = p.text;
+  const btn = $('#btn-earn');
+  btn.disabled = !p.ok;
+  btn.textContent = p.ok ? 'ยืนยันให้ ' + p.points + ' แต้ม' : 'ยืนยันให้แต้ม';
+}
+
+async function earn() {
+  const p = calcPreview();
+  if (!p.ok) return;
+  const btn = $('#btn-earn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+  try {
+    const out = await api('earn', {
+      memberId: state.staffMember.memberId, serviceId: state.staffService,
+      amount: p.amount, receiptNo: $('#rcp').value.trim(),
+    });
+    state.staffMember = out.member;
+    state.staffRecent = out.recent;
+    renderStaffMember();
+    toast('ให้ +' + out.earned + ' แต้มแล้ว · คงเหลือ ' + out.member.points, 'ok');
+  } catch (e) {
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+    btn.disabled = false; updatePreview();
+  }
+}
+
+async function redeem(rewardId) {
+  const r = state.data.rewards.find((x) => x.id === rewardId);
+  if (!r || !confirm('แลก "' + r.name + '" ให้ ' + state.staffMember.displayName + '?\nใช้ ' + r.points + ' แต้ม')) return;
+  try {
+    const out = await api('redeem', { memberId: state.staffMember.memberId, rewardId: rewardId });
+    state.staffMember = out.member;
+    state.staffRecent = out.recent;
+    renderStaffMember();
+    toast('แลกรางวัลเรียบร้อย 🎁', 'ok');
+  } catch (e) {
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 12: เริ่มทำงาน   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+// ปุ่มในหน้า: data-go = เปลี่ยนหน้า, data-link = เปิดลิงก์ภายนอก
+document.addEventListener('click', (ev) => {
+  const g = ev.target.closest('[data-go]');
+  if (g) { ev.preventDefault(); go(g.dataset.go, true); return; }
+  const l = ev.target.closest('[data-link]');
+  if (l) { ev.preventDefault(); openLink(l.dataset.link); }
+});
+
+buildTabbar();
+renderLoading();
+liffPromise = initLiff();
+go(initialPage(), false);
+loadPublic();
+</script>
+</body>
+</html>
