@@ -410,7 +410,7 @@ const ERROR_TEXT = {
   TIMEOUT: 'หลังบ้านตอบช้าเกินไป ลองใหม่อีกครั้ง',
   NOT_JSON: 'หลังบ้านตอบกลับไม่ถูกต้อง ตรวจสอบการตั้งค่า Deploy (Who has access: Anyone)',
   LINE_NOT_CONFIGURED: 'หลังบ้านยังไม่ได้ใส่ Channel ID (ขั้นที่ 3)',
-  NO_TOKEN: 'กรุณาเปิดผ่านแอป LINE',
+  NO_TOKEN: 'ยืนยันตัวตนไม่ได้ · ตรวจว่าเปิดสิทธิ์ openid ใน LINE Developers (Web app settings > Scopes) แล้ว',
   INVALID_TOKEN: 'เซสชันหมดอายุ กรุณาปิดแล้วเปิดใหม่',
   NOT_STAFF: 'บัญชีนี้ไม่มีสิทธิ์พนักงาน',
   MEMBER_NOT_FOUND: 'ไม่พบสมาชิก',
@@ -854,12 +854,24 @@ async function requireLogin(page) {
 
 /** เรียก API ที่ต้องยืนยันตัวตน */
 async function api(action, data) {
+  const idToken = liff.getIDToken();
+  if (!idToken) {
+    // ยังไม่มีบัตรยืนยันตัวตน (เพิ่งเปิดสิทธิ์ openid) → ล็อกอินใหม่ 1 ครั้ง
+    debug('ไม่มี ID token (scope openid) → ล็อกอินใหม่');
+    if (!session('get', 'relogin')) {
+      session('set', 'relogin', '1');
+      liff.logout();
+      liff.login({ redirectUri: location.origin + location.pathname + '?page=' + state.page });
+      throw new Error('REDIRECTING');
+    }
+    throw new Error('NO_TOKEN');
+  }
   let out;
   try {
     const res = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // กัน CORS preflight
-      body: JSON.stringify(Object.assign({ action: action, idToken: liff.getIDToken() }, data || {})),
+      body: JSON.stringify(Object.assign({ action: action, idToken: idToken }, data || {})),
     });
     out = await res.json();
   } catch (e) {
