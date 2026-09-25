@@ -20,6 +20,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F6F1E7">
   <title>2325 CAFE</title>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://lh3.googleusercontent.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
@@ -513,9 +516,28 @@ window.addEventListener('unhandledrejection', (e) => debug('Promise error: ' + (
 
 function placeholder() { return '<div class="ph">' + ICON.cup + '</div>'; }
 
-function imgTag(url, alt) {
+/** ขอรูปจาก Google ในขนาดพอดีกรอบ (ไฟล์เล็ก โหลดเร็ว) */
+function sizedImg(url, w) {
+  if (!url) return '';
+  const m = String(url).match(/drive\.google\.com\/thumbnail\?id=([\w-]+)/);
+  if (m) url = 'https://lh3.googleusercontent.com/d/' + m[1] + '=w800';
+  return /lh3\.googleusercontent\.com\/d\//.test(url) ? url.replace(/=w\d+$/, '') + '=w' + w : url;
+}
+
+/** รูปโหลดไม่ขึ้น → ลองลิงก์สำรองของ Drive 1 ครั้ง → ไม่ได้อีกแสดงกรอบว่าง */
+function imgFail(img) {
+  const m = img.src.match(/lh3\.googleusercontent\.com\/d\/([\w-]+)/);
+  if (m && !img.dataset.retry) {
+    img.dataset.retry = '1';
+    img.src = 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w600';
+  } else {
+    img.outerHTML = placeholder();
+  }
+}
+
+function imgTag(url, alt, w) {
   if (!url) return placeholder();
-  return '<img src="' + esc(url) + '" alt="' + esc(alt) + '" loading="lazy" onerror="this.outerHTML=placeholder()">';
+  return '<img src="' + esc(sizedImg(url, w || 400)) + '" alt="' + esc(alt) + '" loading="lazy" decoding="async" onerror="imgFail(this)">';
 }
 
 function openLink(url) {
@@ -682,9 +704,9 @@ function renderHome() {
 
   // ภาพปก
   h += '<div class="hero">' +
-    (s.coverImage ? '<img class="cover" src="' + esc(s.coverImage) + '" alt="" onerror="this.remove()">' : '') +
+    (s.coverImage ? '<img class="cover" src="' + esc(sizedImg(s.coverImage, 1200)) + '" alt="" fetchpriority="high" onerror="this.remove()">' : '') +
     '<div class="txt">' +
-    (s.logoImage ? '<img class="logo" src="' + esc(s.logoImage) + '" alt="" onerror="this.remove()">' : '') +
+    (s.logoImage ? '<img class="logo" src="' + esc(sizedImg(s.logoImage, 200)) + '" alt="" onerror="this.remove()">' : '') +
     '<div class="name">' + esc(s.shopName) + '</div>' +
     (s.tagline ? '<div class="tagline">' + esc(s.tagline) + '</div>' : '') +
     '</div></div>';
@@ -753,7 +775,7 @@ function renderMenu() {
   if (reco.length) {
     h += '<div class="cat-title"><h2>เมนูแนะนำ</h2><span class="en">Recommended</span></div>' +
       '<div class="reco">' + reco.map((it) =>
-        '<div class="item">' + imgTag(it.image, it.name) +
+        '<div class="item">' + imgTag(it.image, it.name, 480) +
         '<div class="nm">' + esc(it.name) + '</div>' +
         '<div class="muted small">' + priceText(it.price) + '</div></div>').join('') + '</div>';
   }
@@ -777,7 +799,7 @@ function renderMenu() {
 
 function menuItem(it) {
   return '<div class="mitem' + (it.soldOut ? ' sold' : '') + '">' +
-    imgTag(it.image, it.name) +
+    imgTag(it.image, it.name, 240) +
     '<div class="body">' +
     '<div class="nm">' + esc(it.name) +
     (it.recommended && !it.soldOut ? '<span class="badge reco-b">แนะนำ</span>' : '') +
@@ -922,14 +944,40 @@ function pageError(el, e, retry) {
 //  ส่วนที่ 10: บัตรสมาชิก (ลูกค้า)   ⛔ ไม่ต้องแก้
 // ════════════════════════════════════════════════════════════════
 
+const ME_KEY = 'app2325:me:' + CONFIG.LIFF_ID;
+
+/** จำข้อมูลบัตรไว้ในเครื่อง → เปิดครั้งหน้าเห็นบัตรทันที */
+function saveMe(me) {
+  state.me = me;
+  store('set', ME_KEY, me);
+}
+
+function cachedMe() {
+  const c = store('get', ME_KEY);
+  if (!c || !c.profile) return null;
+  try {
+    const t = liff.getDecodedIDToken();
+    if (t && t.sub && t.sub !== c.profile.userId) return null; // คนละบัญชี LINE
+  } catch (e) { /* ignore */ }
+  return c;
+}
+
 async function openReward(force) {
   const el = $('#view-reward');
   if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('สะสมแต้ม'); return; }
-  if (state.me && !force) { renderMember(); return; }
+  if (state.me && !force) { renderMember(); refreshMe(false); return; }
   el.innerHTML = '<div class="page-head"><p class="en">Member</p><h1>สะสมแต้ม</h1></div>' + spinner();
   try {
     await requireLogin('reward');
-    state.me = await api('me');
+    const c = cachedMe();
+    if (c && !force) {
+      // แสดงบัตรที่จำไว้ก่อน แล้วอัปเดตเบื้องหลัง
+      state.me = c;
+      renderMember();
+      refreshMe(false);
+      return;
+    }
+    saveMe(await api('me'));
     renderMember();
   } catch (e) {
     pageError(el, e, () => openReward(true));
@@ -977,6 +1025,7 @@ function renderRegister() {
     try {
       const out = await api('register', { nickname: name, phone: phone, birthday: $('#r-bd').value, consent: true });
       state.me.member = out.member;
+      saveMe(state.me);
       toast('สมัครสมาชิกเรียบร้อย 🎉', 'ok');
       renderCard(out.member);
     } catch (e) {
@@ -1079,7 +1128,7 @@ async function refreshMe(showToast) {
   const btn = $('#btn-refresh');
   if (btn) { btn.disabled = true; btn.textContent = 'กำลังอัปเดต…'; }
   try {
-    state.me = await api('me');
+    saveMe(await api('me'));
     renderMember();
     if (showToast) toast('อัปเดตแล้ว', 'ok');
   } catch (e) {
@@ -1330,9 +1379,9 @@ document.addEventListener('click', (ev) => {
 debug('เริ่มแอป · หน้า ' + initialPage() + ' · ' + navigator.userAgent.slice(0, 90));
 buildTabbar();
 renderLoading();
+loadPublic();               // เริ่มโหลดข้อมูลร้านก่อน (ทำพร้อมกับการเชื่อม LINE)
 liffPromise = initLiff();
 go(initialPage(), false);
-loadPublic();
 </script>
 </body>
 </html>
