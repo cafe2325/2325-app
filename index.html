@@ -954,33 +954,50 @@ function saveMe(me) {
 
 function cachedMe() {
   const c = store('get', ME_KEY);
-  if (!c || !c.profile) return null;
+  return c && c.profile ? c : null;
+}
+
+/** บัตรในเครื่องเป็นของบัญชี LINE ที่เปิดอยู่จริงไหม (เช็กหลังเชื่อม LINE เสร็จ) */
+function sameUser(me) {
   try {
     const t = liff.getDecodedIDToken();
-    if (t && t.sub && t.sub !== c.profile.userId) return null; // คนละบัญชี LINE
-  } catch (e) { /* ignore */ }
-  return c;
+    return !(t && t.sub && me && me.profile && t.sub !== me.profile.userId);
+  } catch (e) { return true; }
 }
 
 async function openReward(force) {
   const el = $('#view-reward');
   if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('สะสมแต้ม'); return; }
   if (state.me && !force) { renderMember(); refreshMe(false); return; }
-  el.innerHTML = '<div class="page-head"><p class="en">Member</p><h1>สะสมแต้ม</h1></div>' + spinner();
+
+  const t0 = Date.now();
+  const c = force ? null : cachedMe();
+  if (c) {
+    // 1) แสดงบัตรที่จำไว้ทันที ไม่ต้องรอ LINE หรือหลังบ้าน
+    state.me = c;
+    renderMember();
+    debug('แสดงบัตรจากเครื่องใน ' + (Date.now() - t0) + ' ms');
+  } else {
+    el.innerHTML = '<div class="page-head"><p class="en">Member</p><h1>สะสมแต้ม</h1></div>' + spinner();
+  }
   try {
     await requireLogin('reward');
-    const c = cachedMe();
-    if (c && !force) {
-      // แสดงบัตรที่จำไว้ก่อน แล้วอัปเดตเบื้องหลัง
-      state.me = c;
-      renderMember();
-      refreshMe(false);
-      return;
+    debug('เชื่อม LINE เสร็จใน ' + (Date.now() - t0) + ' ms');
+    if (c && !sameUser(c)) {            // คนละบัญชี → ล้างแล้วโหลดใหม่
+      store('set', ME_KEY, null);
+      state.me = null;
+      el.innerHTML = '<div class="page-head"><p class="en">Member</p><h1>สะสมแต้ม</h1></div>' + spinner();
     }
+    // 2) อัปเดตแต้มล่าสุดจากหลังบ้าน
     saveMe(await api('me'));
+    debug('ได้แต้มล่าสุดใน ' + (Date.now() - t0) + ' ms');
     renderMember();
   } catch (e) {
-    pageError(el, e, () => openReward(true));
+    if (state.me && e.message !== 'REDIRECTING') {
+      debug('อัปเดตแต้มไม่สำเร็จ: ' + e.message); // ยังเห็นบัตรเดิมอยู่
+    } else {
+      pageError(el, e, () => openReward(true));
+    }
   }
 }
 
