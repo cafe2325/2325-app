@@ -9,6 +9,9 @@
      ?page=delivery  เดลิเวอรี่
      ?page=reward    บัตรสมาชิก / สะสมแต้ม   (ใช้ได้หลังเชื่อม LINE)
      ?page=staff     โหมดพนักงาน             (ใช้ได้หลังเชื่อม LINE)
+     ?page=wellness  Wellness
+     ?page=book      จอง Wellness / การจองของฉัน
+     ?page=promos    โปรโมชั่นทั้งหมด
 
    ส่วนที่ต้องแก้มีที่เดียว: "ส่วนที่ 1: ตั้งค่า" ใน <script> ด้านล่าง
    ✏️ = แก้ได้      ⛔ = ไม่ต้องแก้
@@ -140,29 +143,127 @@
        สไตล์ ส่วนที่ D: หน้าแรก   ⛔
        ═══════════════════════════════════════ */
     .hero {
-      position: relative; margin: 16px 0 14px; border-radius: 22px; overflow: hidden;
-      min-height: 220px; display: flex; align-items: flex-end;
+      position: relative; margin: 14px 0 0; border-radius: 24px; overflow: hidden;
+      min-height: 300px; display: flex; align-items: flex-end; color: #F6F1E7;
       background:
-        radial-gradient(120% 90% at 100% 0%, rgba(217, 195, 160, .28), transparent 60%),
-        linear-gradient(160deg, #3A3733 0%, #2B2A28 55%, #22211F 100%);
-      color: #F6F1E7;
+        radial-gradient(70% 60% at 80% 25%, rgba(190, 140, 80, .45), transparent 60%),
+        linear-gradient(160deg, #4a3a2c 0%, #2b221b 55%, #1c1714 100%);
     }
     .hero img.cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .hero::after {
       content: ''; position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(20,19,18,.72) 100%);
+      background: linear-gradient(180deg, rgba(0,0,0,.05) 25%, rgba(18,15,13,.8) 100%);
     }
     .hero .txt { position: relative; z-index: 1; padding: 22px; width: 100%; }
-    .hero .logo { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; margin-bottom: 12px; background: #fff; }
-    .hero .name { font-family: var(--font-en); font-weight: 700; font-size: 30px; letter-spacing: .06em; line-height: 1.1; }
-    .hero .tagline { opacity: .82; margin-top: 4px; font-size: 15px; }
-
-    .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-    .quick a {
-      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-      padding: 14px 6px 12px; text-align: center; font-size: 13px; font-weight: 500;
+    .hero .logo { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; margin-bottom: 12px; background: #fff; }
+    .hero .tag { font-size: 12px; color: var(--wood); }
+    .hero h1 { font-size: 28px; line-height: 1.25; font-weight: 700; margin: 6px 0 4px; white-space: pre-line; }
+    .hero .sub { font-size: 14px; opacity: .85; }
+    .status {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px;
+      border-radius: 999px; background: rgba(246, 241, 231, .14); border: 1px solid rgba(246, 241, 231, .25); font-size: 13px;
     }
-    .quick svg { width: 28px; height: 28px; color: var(--gold); margin: 0 auto 6px; display: block; }
+    .status i { width: 8px; height: 8px; border-radius: 50%; background: #C98A6B; }
+    .status.open i { background: #7DBB8A; box-shadow: 0 0 0 3px rgba(125, 187, 138, .25); }
+
+    .mini {
+      margin-top: 14px; border-radius: 20px; padding: 16px 18px; color: #F6F1E7;
+      background: linear-gradient(150deg, #3A3733, #2B2A28 60%, #1F1E1C);
+      display: flex; gap: 14px; align-items: center;
+    }
+    .mini .l { flex: 1; min-width: 0; }
+    .mini .hi { font-size: 13px; opacity: .7; }
+    .mini .pts { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
+    .mini .pts b { font-family: var(--font-en); font-size: 26px; }
+    .mini .pts span { font-size: 13px; opacity: .7; }
+    .seg { display: flex; gap: 4px; margin: 10px 0 8px; }
+    .seg i { flex: 1; height: 6px; border-radius: 4px; background: rgba(246, 241, 231, .15); }
+    .seg i.on { background: var(--gold); }
+    .mini .note { font-size: 12.5px; color: var(--wood); }
+    .qrbtn {
+      width: 70px; height: 64px; border-radius: 16px; background: var(--gold-soft); color: var(--ink); border: 0; flex: none; white-space: nowrap;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      font: 600 10.5px var(--font); cursor: pointer;
+    }
+    .qrbtn svg { width: 24px; height: 24px; }
+    .join {
+      margin-top: 14px; border-radius: 20px; padding: 16px; background: var(--card); border: 1px solid var(--line);
+      display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
+    }
+    .join .ic { width: 50px; height: 50px; border-radius: 14px; background: var(--gold-soft); color: var(--gold); display: grid; place-items: center; flex: none; }
+    .join .ic svg { width: 26px; height: 26px; }
+    .join b { display: block; font-size: 15.5px; }
+    .join span { font-size: 13px; color: var(--muted); }
+    .join .go { margin-left: auto; color: var(--gold); flex: none; }
+    .join .go svg { width: 20px; height: 20px; }
+
+    .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 0 10px; }
+    .sec h2 { font-size: 18px; font-weight: 600; }
+    .sec a { font-size: 13px; color: var(--gold); font-weight: 600; }
+    .hs {
+      display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 4px;
+      scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none;
+    }
+    .hs::-webkit-scrollbar { display: none; }
+    .hs > * { scroll-snap-align: start; }
+    .promo {
+      flex: none; width: min(82vw, 340px); aspect-ratio: 16 / 9; border-radius: 18px; position: relative; overflow: hidden;
+      color: #fff; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; text-align: left;
+      border: 0; font: inherit; cursor: pointer;
+      background: radial-gradient(50% 60% at 75% 35%, #d9b48a, transparent 70%), linear-gradient(135deg, #8a6242, #3d2a1d);
+    }
+    .promo.alt { background: radial-gradient(50% 60% at 70% 35%, #b9cf9a, transparent 70%), linear-gradient(135deg, #6f8a55, #2f3d25); }
+    .promo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .promo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.6), rgba(0,0,0,0) 60%); }
+    .promo > div { position: relative; z-index: 1; }
+    .promo .badge2 {
+      position: absolute; top: 14px; left: 14px; z-index: 1; font-size: 11px; font-weight: 700;
+      background: rgba(255,255,255,.92); color: var(--ink); padding: 4px 10px; border-radius: 999px;
+    }
+    .promo b { display: block; font-size: 19px; line-height: 1.25; }
+    .promo span.d { font-size: 12.5px; opacity: .9; }
+    .promo.full { width: 100%; margin-bottom: 12px; }
+    .dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+    .dots i { width: 6px; height: 6px; border-radius: 4px; background: var(--line); transition: all .2s; }
+    .dots i.on { width: 18px; background: var(--gold); }
+    .hs .item { flex: none; width: 150px; }
+    .hs .item .ph, .hs .item img { width: 150px; height: 150px; border-radius: 18px; object-fit: cover; }
+    .hs .item .nm { font-weight: 600; font-size: 15px; margin-top: 8px; line-height: 1.3; }
+    .hs .item .pr { color: var(--gold); font-weight: 600; font-size: 14px; }
+
+    .well {
+      margin-top: 26px; border-radius: 22px; overflow: hidden; position: relative; min-height: 160px; color: #fff; padding: 18px;
+      display: block; width: 100%; text-align: left; border: 0; font: inherit; cursor: pointer;
+      background: radial-gradient(60% 80% at 85% 50%, #9cc3d0, transparent 70%), linear-gradient(135deg, #3b5a66, #1c2a30);
+    }
+    .well img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .well::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20,32,38,.88), rgba(20,32,38,.15)); }
+    .well > div { position: relative; z-index: 1; }
+    .well .k { font-size: 11px; color: #bfe0ea; }
+    .well b { display: block; font-size: 22px; margin: 4px 0 2px; }
+    .well p { font-size: 13px; opacity: .88; max-width: 75%; }
+    .chip2 {
+      display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; font-size: 12.5px; font-weight: 600;
+      background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3); padding: 6px 12px; border-radius: 999px;
+    }
+    .well .ics { position: absolute; right: 18px; top: 18px; display: flex; gap: 8px; z-index: 1; }
+    .well .ics span { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.14); display: grid; place-items: center; }
+    .well .ics svg { width: 22px; height: 22px; }
+    .svc { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+    .svc:first-of-type { border-top: 0; padding-top: 0; }
+    .svc .ic { width: 44px; height: 44px; border-radius: 12px; background: #E3EDF0; color: #3b5a66; display: grid; place-items: center; flex: none; }
+    .svc .ic svg { width: 22px; height: 22px; }
+    .svc b { display: block; font-weight: 600; }
+    .svc span { font-size: 13.5px; color: var(--ink-2); }
+    .home-info { margin-top: 26px; }
+
+    .sheet-bg { position: fixed; inset: 0; background: rgba(20,19,18,.5); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+    .sheet {
+      width: 100%; max-width: 480px; background: var(--card); border-radius: 24px 24px 0 0; padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
+      text-align: center; animation: up .22s ease-out;
+    }
+    @keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .sheet h3 { font-size: 18px; margin-bottom: 4px; }
 
     .info-row { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
     .info-row:first-of-type { border-top: 0; padding-top: 2px; }
@@ -324,6 +425,110 @@
     .preview b { font-size: 18px; }
     .code-box { font-family: ui-monospace, monospace; font-size: 12.5px; word-break: break-all; background: var(--bg); padding: 12px; border-radius: 10px; margin: 10px 0; }
 
+    /* ═══════════════════════════════════════
+       สไตล์ ส่วนที่ I: จอง Wellness   ⛔
+       ═══════════════════════════════════════ */
+    :root { --sea: #3b5a66; --sea-soft: #E3EDF0; --warn: #9a4f33; --warn-soft: #F6E7DF; }
+    body.has-bbar { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .bk-head { padding: 16px 0 6px; }
+    .bk-head .en { font-size: 11.5px; color: var(--sea); }
+    .bk-head h1 { font-size: 24px; font-weight: 600; line-height: 1.3; }
+    .back { display: inline-flex; align-items: center; gap: 4px; font: 500 14px var(--font); color: var(--muted); background: none; border: 0; padding: 6px 0; cursor: pointer; }
+    .back svg { width: 18px; height: 18px; transform: rotate(180deg); }
+    .tiers { display: flex; gap: 8px; }
+    .tier { flex: 1; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 4px; text-align: center; background: #fff; min-width: 0; }
+    .tier b { display: block; font-size: 14px; font-weight: 600; }
+    .tier span { font-size: 12px; color: var(--muted); }
+    .tier.on { border-color: var(--sea); background: var(--sea-soft); }
+    .tier.on span { color: var(--sea); font-weight: 600; }
+    .stepper { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+    .stepper button { width: 52px; height: 52px; border-radius: 14px; border: 0; background: var(--gold-soft); font: 600 26px var(--font-en); color: var(--ink); cursor: pointer; }
+    .stepper button:disabled { opacity: .35; }
+    .stepper .n { text-align: center; }
+    .stepper .n b { font-family: var(--font-en); font-size: 34px; line-height: 1.1; }
+    .stepper .n span { display: block; font-size: 12.5px; color: var(--muted); }
+    .days { display: flex; gap: 8px; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 4px; scrollbar-width: none; }
+    .days::-webkit-scrollbar { display: none; }
+    .day { flex: none; width: 58px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; text-align: center; padding: 7px 0 6px; font-family: var(--font); color: var(--ink); cursor: pointer; }
+    .day small { display: block; font-size: 11px; color: var(--muted); }
+    .day b { font-size: 19px; font-family: var(--font-en); }
+    .day i { display: block; font-style: normal; font-size: 10.5px; color: var(--muted); }
+    .day.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .day.on small, .day.on i { color: #cfc6b8; }
+    .day:disabled { opacity: .38; cursor: default; }
+    .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .slot { border-radius: 12px; border: 1.5px solid var(--line); background: #fff; text-align: center; padding: 9px 0; font: 600 16px var(--font-en); color: var(--ink); cursor: pointer; }
+    .slot small { display: block; font: 400 11px var(--font); color: var(--muted); }
+    .slot:disabled { background: #EFEAE2; color: #B5ADA2; border-color: #EFEAE2; cursor: default; }
+    .slot.on { background: var(--sea); border-color: var(--sea); color: #fff; }
+    .slot.on small { color: #d6e7ec; }
+    .bbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(255,255,255,.97); backdrop-filter: blur(8px);
+      border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    }
+    .bbar .in { max-width: 448px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+    .bbar .l { flex: 1; min-width: 0; font-size: 12.5px; color: var(--muted); }
+    .bbar .l b { display: block; font-size: 17px; color: var(--ink); }
+    .bbar .btn { width: auto; padding: 13px 22px; background: var(--sea); }
+    .btn.sea { background: var(--sea); color: #fff; }
+    .li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: 14.5px; border-top: 1px solid var(--line); }
+    .li:first-child { border-top: 0; padding-top: 0; }
+    .li span { color: var(--muted); flex: none; }
+    .li b { font-weight: 600; text-align: right; }
+    .li.big b { font-size: 18px; }
+    .li.dep b { color: var(--sea); font-size: 18px; }
+    .rules { font-size: 13.5px; color: var(--ink-2); line-height: 1.65; padding-left: 18px; margin: 0; }
+    .timer { display: inline-flex; gap: 6px; align-items: center; background: var(--warn-soft); color: var(--warn); font-weight: 600; font-size: 13.5px; padding: 6px 14px; border-radius: 999px; }
+    .timer svg { width: 16px; height: 16px; }
+    .payqr { display: grid; place-items: center; margin: 14px 0 6px; }
+    .payqr > div, .payqr > img { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+    .payqr img { max-width: 240px; }
+    .amt { text-align: center; }
+    .amt small { font-size: 12.5px; color: var(--muted); }
+    .amt b { display: block; font-family: var(--font-en); font-size: 34px; color: var(--sea); line-height: 1.2; }
+    .up { display: block; border: 2px dashed #C9BFAF; border-radius: 16px; padding: 18px; text-align: center; color: var(--muted); font-size: 13.5px; margin-top: 14px; background: #fff; cursor: pointer; }
+    .up b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 2px; }
+    .up img { max-height: 260px; margin: 0 auto 8px; border-radius: 10px; }
+    .up input { display: none; }
+    .ticket { background: linear-gradient(150deg, #3b5a66, #1c2a30); color: #fff; border-radius: 22px; padding: 20px; margin: 14px 0; }
+    .ticket h2 { font-size: 22px; margin: 12px 0 2px; }
+    .ticket p { opacity: .8; font-size: 13.5px; }
+    .ticket .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; border-top: 1px dashed rgba(255,255,255,.3); padding-top: 14px; }
+    .ticket .grid small { display: block; font-size: 11.5px; opacity: .65; }
+    .ticket .grid b { font-size: 15px; font-weight: 600; }
+    .ticket .tq { display: grid; place-items: center; margin-top: 16px; }
+    .ticket .tq > div { background: #fff; border-radius: 12px; padding: 10px; }
+    .ticket .cap { text-align: center; font-size: 12.5px; opacity: .75; margin-top: 8px; }
+    .bst { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 600; padding: 4px 12px; border-radius: 999px; background: var(--gold-soft); color: var(--ink); white-space: nowrap; }
+    .bst::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .bst.wait { background: #FBF0D9; color: #9a6a12; }
+    .bst.ok { background: #E1EFE4; color: var(--ok); }
+    .bst.done { background: #ECE7DF; color: var(--ink-2); }
+    .bst.bad { background: var(--warn-soft); color: var(--danger); }
+    .ticket .bst.wait { background: rgba(255,213,128,.18); color: #FFD580; border: 1px solid rgba(255,213,128,.4); }
+    .ticket .bst.ok { background: rgba(125,187,138,.2); color: #9fe0ad; border: 1px solid rgba(125,187,138,.45); }
+    .ticket .bst.done, .ticket .bst.bad { background: rgba(255,255,255,.14); color: #fff; }
+    .tl div { display: flex; gap: 10px; align-items: center; font-size: 14px; padding: 6px 0; }
+    .tl i { width: 20px; height: 20px; border-radius: 50%; background: #D8D0C4; flex: none; }
+    .tl i.y { background: var(--ok); }
+    .tl i.w { background: #E5B454; }
+    .bitem { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; border-top: 1px solid var(--line); padding: 12px 0; cursor: pointer; }
+    .card-title + .bitem, .bitem:first-child { border-top: 0; padding-top: 0; }
+    .bitem .dt { width: 54px; flex: none; text-align: center; background: var(--sea-soft); color: var(--sea); border-radius: 12px; padding: 6px 0; }
+    .bitem .dt small { display: block; font-size: 11px; }
+    .bitem .dt b { font: 700 18px var(--font-en); }
+    .bitem .bd { flex: 1; min-width: 0; }
+    .bitem .bd b { display: block; font-weight: 600; }
+    .bitem .bd span { font-size: 13px; color: var(--muted); }
+    .price-list { display: flex; gap: 8px; margin-top: 4px; }
+    .price-list div { flex: 1; text-align: center; background: var(--sea-soft); border-radius: 12px; padding: 10px 4px; }
+    .price-list b { display: block; font: 700 17px var(--font-en); color: var(--sea); }
+    .price-list span { font-size: 12px; color: var(--ink-2); }
+    .sheet.left { text-align: left; max-height: 92vh; overflow-y: auto; }
+    .slip-img { width: 100%; border-radius: 12px; border: 1px solid var(--line); margin-top: 8px; }
+    .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+    .btn-row .btn { flex: 1; }
+
     #toast {
       position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);
       transform: translateX(-50%) translateY(16px); z-index: 50;
@@ -348,6 +553,15 @@
   <!-- ═══════════════ เดลิเวอรี่ ═══════════════ -->
   <section id="view-delivery" class="view wrap" hidden></section>
 
+  <!-- ═══════════════ Wellness ═══════════════ -->
+  <section id="view-wellness" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ จอง Wellness ═══════════════ -->
+  <section id="view-book" class="view wrap" hidden></section>
+
+  <!-- ═══════════════ โปรโมชั่นทั้งหมด ═══════════════ -->
+  <section id="view-promos" class="view wrap" hidden></section>
+
   <!-- ═══════════════ บัตรสมาชิก ═══════════════ -->
   <section id="view-reward" class="view wrap" hidden></section>
 
@@ -360,6 +574,7 @@
       <button class="tab" data-page="home"></button>
       <button class="tab" data-page="menu"></button>
       <button class="tab" data-page="reward"></button>
+      <button class="tab" data-page="wellness"></button>
       <button class="tab" data-page="delivery"></button>
     </div>
   </nav>
@@ -402,6 +617,9 @@ const ICON = {
   arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
   scan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M4 12h16"/></svg>',
   gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="4" rx="1"/><path d="M5.5 13v7h13v-7M12 9v11M12 9c-1.5-3.5-5-3.5-5-1.2C7 9 9 9 12 9Zm0 0c1.5-3.5 5-3.5 5-1.2C17 9 15 9 12 9Z"/></svg>',
+  snow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2.5v19M4 7l16 10M20 7 4 17M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-8Z"/></svg>',
+  qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>',
   link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
 };
 
@@ -409,6 +627,7 @@ const TABS = [
   { page: 'home', label: 'หน้าแรก', icon: 'home' },
   { page: 'menu', label: 'เมนู', icon: 'cup' },
   { page: 'reward', label: 'สะสมแต้ม', icon: 'star' },
+  { page: 'wellness', label: 'Wellness', icon: 'flame' },
   { page: 'delivery', label: 'เดลิเวอรี่', icon: 'bike' },
 ];
 
@@ -436,6 +655,20 @@ const ERROR_TEXT = {
   MISSING_COLUMN: 'หัวคอลัมน์ใน Sheet ถูกเปลี่ยนชื่อ',
   SERVER_ERROR: 'ระบบหลังบ้านมีปัญหา',
   GOT_GET_RESPONSE: 'หลังบ้านตอบกลับผิดประเภท (ส่งภาพหน้าจอโหมด debug ให้ผู้ดูแลระบบ)',
+  BOOKING_CLOSED: 'ยังไม่เปิดรับจองตอนนี้',
+  INVALID_PEOPLE: 'จำนวนผู้ใช้บริการไม่ถูกต้อง',
+  NO_TIER: 'ยังไม่มีราคาสำหรับจำนวนนี้',
+  INVALID_SLOT: 'รอบนี้จองไม่ได้แล้ว กรุณาเลือกรอบใหม่',
+  SLOT_TAKEN: 'มีคนจองรอบนี้ไปแล้ว กรุณาเลือกรอบใหม่',
+  BOOKING_NOT_FOUND: 'ไม่พบการจองนี้',
+  BAD_STATUS: 'สถานะการจองเปลี่ยนไปแล้ว ลองโหลดใหม่',
+  HOLD_EXPIRED: 'หมดเวลาชำระมัดจำ กรุณาจองใหม่ (ถ้าโอนแล้ว ติดต่อร้านทางแชท)',
+  WAIT_CONFIRM: 'รอร้านตรวจสลิปก่อน จึงจะยกเลิกได้',
+  TOO_LATE: 'เลยเวลาที่เลื่อน/ยกเลิกได้แล้ว กรุณาติดต่อร้าน',
+  RESCHEDULE_USED: 'ใช้สิทธิ์เลื่อนนัดครบแล้ว กรุณาติดต่อร้าน',
+  BAD_IMAGE: 'อ่านรูปสลิปไม่ได้ ลองเลือกรูปใหม่',
+  IMAGE_TOO_BIG: 'รูปใหญ่เกินไป ลองแคปหน้าจอสลิปแทน',
+  UNKNOWN_ACTION: 'หลังบ้านยังเป็นเวอร์ชันเก่า (ต้อง Deploy > New version)',
 };
 
 
@@ -451,7 +684,10 @@ const state = {
   me: null,            // ข้อมูลสมาชิกของฉัน
   staffMember: null,   // สมาชิกที่พนักงานกำลังดู
   staffService: null,
+  wb: { step: 'pick', people: 1, date: '', time: '', days: null, mine: null, booking: null, resched: null, slip: '' },
 };
+let dataResolve;
+const dataReady = new Promise((r) => (dataResolve = r));
 let liffPromise = Promise.resolve(false);
 
 const $ = (sel) => document.querySelector(sel);
@@ -603,14 +839,17 @@ async function loadPublic() {
 }
 
 function setData(d) {
-  const key = JSON.stringify([d.shop, d.menu, d.rewards, d.services]);
+  const key = JSON.stringify(Object.assign({}, d, { updatedAt: 0 }));
   if (key === state.dataKey) return; // ไม่มีอะไรเปลี่ยน
   state.dataKey = key;
   state.data = d;
+  dataResolve(d);
   document.title = d.shop.shopName || '2325 CAFE';
   safeRender('home', renderHome);
   safeRender('menu', renderMenu);
   safeRender('delivery', renderDelivery);
+  safeRender('wellness', renderWellness);
+  safeRender('promos', renderPromos);
   if (state.page === 'reward' && state.me) renderMember();
   if ($('#staff-shop')) $('#staff-shop').textContent = d.shop.shopName;
   if (state.page === 'staff' && state.staffMember) renderStaffMember();
@@ -634,14 +873,17 @@ function renderPublicError(e) {
     '<p style="font-size:34px">☕</p><p class="card-title">โหลดข้อมูลไม่สำเร็จ</p>' +
     '<p class="muted small" style="margin-bottom:14px">' + errText(e) + '</p>' +
     '<button class="btn" onclick="location.reload()">ลองใหม่</button></div>';
-  ['home', 'menu', 'delivery'].forEach((p) => ($('#view-' + p).innerHTML = html));
+  ['home', 'menu', 'delivery', 'wellness', 'promos'].forEach((p) => ($('#view-' + p).innerHTML = html));
 }
 
 function renderLoading() {
   $('#view-home').innerHTML =
-    '<div class="skeleton" style="height:220px;margin:16px 0 14px;border-radius:22px"></div>' +
-    '<div class="quick">' + '<div class="skeleton" style="height:84px"></div>'.repeat(3) + '</div>' +
-    '<div class="skeleton" style="height:160px"></div>';
+    '<div class="skeleton" style="height:300px;margin-top:14px;border-radius:24px"></div>' +
+    '<div class="skeleton" style="height:96px;margin-top:14px;border-radius:20px"></div>' +
+    '<div class="skeleton" style="height:180px;margin-top:40px;border-radius:18px"></div>';
+  $('#view-wellness').innerHTML = '<div class="skeleton" style="height:200px;margin-top:14px;border-radius:22px"></div>';
+  $('#view-promos').innerHTML = '<div class="page-head"><p class="en">Promotion</p><h1>โปรโมชั่น</h1></div>' +
+    '<div class="skeleton" style="height:190px;margin-bottom:12px;border-radius:18px"></div>'.repeat(2);
   $('#view-menu').innerHTML = '<div class="page-head"><p class="en">Our Menu</p><h1>เมนู</h1></div>' +
     '<div class="skeleton" style="height:76px;margin-bottom:12px"></div>'.repeat(5);
   $('#view-delivery').innerHTML = '<div class="page-head"><p class="en">Delivery</p><h1>เดลิเวอรี่</h1></div>' +
@@ -653,7 +895,7 @@ function renderLoading() {
 //  ส่วนที่ 5: เปลี่ยนหน้า   ⛔ ไม่ต้องแก้
 // ════════════════════════════════════════════════════════════════
 
-const PAGES = ['home', 'menu', 'delivery', 'reward', 'staff'];
+const PAGES = ['home', 'menu', 'delivery', 'reward', 'staff', 'wellness', 'promos', 'book'];
 
 /** อ่านหน้าที่ต้องเปิดจาก ?page=... (รองรับตอน LINE ส่งมาเป็น liff.state) */
 function initialPage() {
@@ -671,10 +913,13 @@ function go(page, fromUser) {
   if (!PAGES.includes(page)) page = 'home';
   state.page = page;
   document.querySelectorAll('.view').forEach((v) => (v.hidden = v.id !== 'view-' + page));
-  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.page === page));
-  const staff = page === 'staff';
-  $('#tabbar').hidden = staff;
-  document.body.classList.toggle('no-tabbar', staff);
+  const tabPage = page === 'book' ? 'wellness' : page;
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.page === tabPage));
+  const noTab = page === 'staff' || page === 'book';
+  $('#tabbar').hidden = noTab;
+  document.body.classList.toggle('no-tabbar', noTab);
+  document.body.classList.remove('has-bbar');
+  document.querySelectorAll('.sheet-bg').forEach((x) => x.remove());
   window.scrollTo(0, 0);
 
   // จำหน้าปัจจุบันไว้ใน URL (เฉพาะตอนผู้ใช้กดเปลี่ยนหน้าเอง)
@@ -683,6 +928,7 @@ function go(page, fromUser) {
   }
   if (page === 'reward') openReward();
   if (page === 'staff') openStaff();
+  if (page === 'book') openBook();
 }
 
 function buildTabbar() {
@@ -699,29 +945,49 @@ function buildTabbar() {
 // ════════════════════════════════════════════════════════════════
 
 function renderHome() {
-  const s = state.data.shop;
+  const d = state.data;
+  const s = d.shop;
   let h = '';
 
-  // ภาพปก
+  // 1) ภาพปก + ป้ายเปิด/ปิด
+  const st = openStatus(s);
   h += '<div class="hero">' +
     (s.coverImage ? '<img class="cover" src="' + esc(sizedImg(s.coverImage, 1200)) + '" alt="" fetchpriority="high" onerror="this.remove()">' : '') +
     '<div class="txt">' +
     (s.logoImage ? '<img class="logo" src="' + esc(sizedImg(s.logoImage, 200)) + '" alt="" onerror="this.remove()">' : '') +
-    '<div class="name">' + esc(s.shopName) + '</div>' +
-    (s.tagline ? '<div class="tagline">' + esc(s.tagline) + '</div>' : '') +
+    (s.tagline ? '<div class="tag en">' + esc(s.tagline) + '</div>' : '') +
+    '<h1>' + esc(s.heroTitle || s.shopName) + '</h1>' +
+    (s.heroSubtitle ? '<div class="sub">' + esc(s.heroSubtitle) + '</div>' : '') +
+    (st ? '<div class="status' + (st.open ? ' open' : '') + '" id="open-status"><i></i><span>' + esc(st.text) + '</span></div>' : '') +
     '</div></div>';
 
-  // ประกาศ
-  if (s.announcement) h += '<div class="notice">' + ICON.info + '<div>' + esc(s.announcement) + '</div></div>';
+  if (s.announcement) h += '<div class="notice" style="margin-top:14px">' + ICON.info + '<div>' + esc(s.announcement) + '</div></div>';
 
-  // ปุ่มลัด
-  h += '<div class="quick">' +
-    '<a href="#" data-go="menu">' + ICON.cup + 'เมนู</a>' +
-    '<a href="#" data-go="reward">' + ICON.star + 'สะสมแต้ม</a>' +
-    '<a href="#" data-go="delivery">' + ICON.bike + 'เดลิเวอรี่</a>' +
-    '</div>';
+  // 2) การ์ดสมาชิก
+  h += '<div id="home-member"></div>';
 
-  // ข้อมูลร้าน
+  // 3) โปรโมชั่น
+  const promos = d.promos || [];
+  if (promos.length) {
+    h += '<div class="sec"><h2>โปรโมชั่น</h2>' + (promos.length > 1 ? '<a href="#" data-go="promos">ทั้งหมด →</a>' : '') + '</div>' +
+      '<div class="hs" id="promo-row">' + promos.map(promoCard).join('') + '</div>' +
+      (promos.length > 1 ? '<div class="dots" id="promo-dots">' + promos.map((_, i) => '<i' + (i === 0 ? ' class="on"' : '') + '></i>').join('') + '</div>' : '');
+  }
+
+  // 4) เมนูแนะนำ
+  const reco = [];
+  (d.menu || []).forEach((g) => g.items.forEach((it) => { if (it.recommended && !it.soldOut) reco.push(it); }));
+  if (reco.length) {
+    h += '<div class="sec"><h2>เมนูแนะนำ</h2><a href="#" data-go="menu">ดูทั้งหมด →</a></div>' +
+      '<div class="hs">' + reco.map((it) =>
+        '<div class="item" data-go="menu">' + imgTag(it.image, it.name, 480) +
+        '<div class="nm">' + esc(it.name) + '</div><div class="pr">' + priceText(it.price) + '</div></div>').join('') + '</div>';
+  }
+
+  // 5) Wellness
+  if (d.wellness && d.wellness.title) h += wellnessCard(d.wellness);
+
+  // 6) ข้อมูลร้าน
   const rows = [];
   if (s.openHours) rows.push(infoRow('clock', 'เวลาเปิด-ปิด', s.openHours));
   if (s.closedNote) rows.push(infoRow('calendar', 'วันหยุด', s.closedNote));
@@ -737,10 +1003,180 @@ function renderHome() {
   if (s.facebookUrl) social.push('<button class="pill" data-link="' + esc(s.facebookUrl) + '">Facebook</button>');
   if (s.instagramUrl) social.push('<button class="pill" data-link="' + esc(s.instagramUrl) + '">Instagram</button>');
   if (social.length) rows.push(infoRow('link', 'ติดตามเรา', '', '', '<div class="social">' + social.join('') + '</div>'));
-
-  if (rows.length) h += '<div class="card">' + rows.join('') + '</div>';
+  if (rows.length) h += '<div class="card home-info">' + rows.join('') + '</div>';
 
   $('#view-home').innerHTML = h;
+  renderHomeMember();
+  watchDots('promo-row', 'promo-dots');
+}
+
+/** การ์ดสมาชิกบนหน้าแรก: เป็นสมาชิก → แต้ม + ปุ่ม QR · ยังไม่เป็น → ชวนสมัคร */
+function renderHomeMember() {
+  const box = $('#home-member');
+  if (!box || !state.data) return;
+  const me = state.me || (CONFIG.LIFF_ID ? cachedMe() : null);
+  const m = me && me.member;
+  const r = (state.data.rewards || [])[0];
+  if (m) {
+    const target = r ? r.points : 10;
+    const shown = Math.min(target, 12);
+    const on = Math.min(m.points, target);
+    const onSeg = Math.round((on / target) * shown);
+    let note = 'แสดง QR ให้พนักงานเมื่อชำระเงิน';
+    if (r) note = m.points >= r.points ? '🎉 แลก ' + r.name + ' ได้แล้ว!' : 'อีก ' + (r.points - m.points) + ' แต้ม รับ' + r.name;
+    box.innerHTML = '<div class="mini">' +
+      '<div class="l" data-go="reward"><div class="hi">สวัสดีคุณ ' + esc(m.displayName) + '</div>' +
+      '<div class="pts"><b>' + m.points + '</b><span>/ ' + target + ' แต้ม</span></div>' +
+      '<div class="seg">' + Array.from({ length: shown }, (_, i) => '<i' + (i < onSeg ? ' class="on"' : '') + '></i>').join('') + '</div>' +
+      '<div class="note">' + esc(note) + '</div></div>' +
+      '<button class="qrbtn" id="btn-myqr">' + ICON.qr + 'QR ของฉัน</button></div>';
+    $('#btn-myqr').onclick = () => showQrSheet(m);
+  } else {
+    const svc = (state.data.services || []).find((x) => x.earnType === 'ตามยอดเงิน');
+    const title = r ? 'สะสมครบ ' + r.points + ' แต้ม รับ' + r.name : 'สมัครสมาชิก สะสมแต้ม';
+    const sub = (svc ? 'ทุก ' + baht(svc.earnValue) + ' บาท รับ 1 แต้ม · ' : '') + 'สมัครฟรี';
+    box.innerHTML = '<button class="join" data-go="reward"><span class="ic">' + ICON.gift + '</span>' +
+      '<span><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="go">' + ICON.arrow + '</span></button>';
+  }
+}
+
+/** เปิด QR เต็มจอแบบแผ่นเลื่อนขึ้นจากด้านล่าง */
+function showQrSheet(m) {
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg';
+  bg.innerHTML = '<div class="sheet"><h3>QR สมาชิก</h3><p class="muted small">แสดงให้พนักงานสแกนเมื่อชำระเงิน</p>' +
+    '<div class="qr-box" style="margin:16px 0 10px"><div id="qr-sheet" style="background:#fff;padding:12px;border-radius:14px;border:1px solid var(--line)"></div></div>' +
+    '<p class="small muted">รหัสสมาชิก <b style="color:var(--ink)">' + fmtId(m.memberId) + '</b> · ' + m.points + ' แต้ม</p>' +
+    '<button class="btn soft" style="margin-top:16px">ปิด</button></div>';
+  bg.addEventListener('click', (e) => { if (e.target === bg || e.target.closest('button')) bg.remove(); });
+  document.body.appendChild(bg);
+  drawQr(m.memberId, $('#qr-sheet'));
+}
+
+function promoCard(p, i) {
+  return '<button class="promo' + (i % 2 ? ' alt' : '') + '" data-promo="' + i + '">' +
+    (p.image ? '<img src="' + esc(sizedImg(p.image, 800)) + '" alt="" loading="lazy" onerror="this.remove()">' : '') +
+    (p.badge ? '<span class="badge2">' + esc(p.badge) + '</span>' : '') +
+    '<div><b>' + esc(p.title) + '</b>' + (p.detail ? '<span class="d">' + esc(p.detail) + '</span>' : '') + '</div></button>';
+}
+
+function openPromo(i) {
+  const p = (state.data.promos || [])[i];
+  if (!p) return;
+  const map = { 'เมนู': 'menu', 'สะสมแต้ม': 'reward', 'Wellness': 'wellness', 'หน้าแรก': 'home' };
+  if (p.target === 'ลิงก์ภายนอก') { if (p.link) openLink(p.link); return; }
+  go(map[p.target] || 'menu', true);
+}
+
+/** จุดบอกตำแหน่งแบนเนอร์ ขยับตามการเลื่อน */
+function watchDots(rowId, dotsId) {
+  const row = document.getElementById(rowId);
+  const dots = document.getElementById(dotsId);
+  if (!row || !dots) return;
+  row.addEventListener('scroll', () => {
+    const first = row.children[0];
+    if (!first) return;
+    const w = first.getBoundingClientRect().width + 12;
+    const i = Math.min(dots.children.length - 1, Math.round(row.scrollLeft / w));
+    Array.from(dots.children).forEach((d, k) => d.classList.toggle('on', k === i));
+  }, { passive: true });
+}
+
+function wellnessCard(w) {
+  return '<button class="well" data-go="wellness">' +
+    (w.image ? '<img src="' + esc(sizedImg(w.image, 900)) + '" alt="" loading="lazy" onerror="this.remove()">' : '') +
+    '<span class="ics"><span>' + ICON.snow + '</span><span>' + ICON.flame + '</span></span>' +
+    '<div><div class="k en">Wellness</div><b>' + esc(w.title) + '</b>' +
+    (w.subtitle ? '<p>' + esc(w.subtitle) + '</p>' : '') +
+    (w.status ? '<span class="chip2">' + esc(w.status) + '</span>' : '') + '</div></button>';
+}
+
+/**
+ * ป้ายเปิด/ปิด คำนวณจากเวลาไทย (UTC+7)
+ * shop.hours = [อา, จ, …, ส] แต่ละวัน [นาทีเปิด, นาทีปิด] หรือ null
+ */
+const DAY_TH = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+function openStatus(shop) {
+  const hours = shop.hours || [];
+  if (!hours.some(Boolean)) return null;
+  const holidays = shop.holidays || [];
+  const hm = (n) => ('0' + Math.floor(n / 60)).slice(-2) + ':' + ('0' + (n % 60)).slice(-2);
+  const now = new Date(Date.now() + 7 * 3600e3);
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const todayH = holidays.indexOf(iso(now)) >= 0 ? null : hours[now.getUTCDay()];
+  if (todayH && mins >= todayH[0] && mins < todayH[1]) return { open: true, text: 'เปิดอยู่ · ปิด ' + hm(todayH[1]) + ' น.' };
+  if (todayH && mins < todayH[0]) return { open: false, text: 'ยังไม่เปิด · เปิด ' + hm(todayH[0]) + ' น.' };
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(now.getTime() + i * 864e5);
+    const hh = holidays.indexOf(iso(d)) >= 0 ? null : hours[d.getUTCDay()];
+    if (hh) return { open: false, text: 'ปิดแล้ว · เปิด' + (i === 1 ? 'พรุ่งนี้' : 'วัน' + DAY_TH[d.getUTCDay()]) + ' ' + hm(hh[0]) + ' น.' };
+  }
+  return { open: false, text: 'ปิดชั่วคราว' };
+}
+
+// อัปเดตป้ายเปิด/ปิดทุกนาที
+setInterval(() => {
+  const el = $('#open-status');
+  if (!el || !state.data) return;
+  const st = openStatus(state.data.shop);
+  if (!st) return;
+  el.className = 'status' + (st.open ? ' open' : '');
+  el.querySelector('span').textContent = st.text;
+}, 60000);
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 6.1: หน้า Wellness + หน้าโปรโมชั่นทั้งหมด   ⛔ ไม่ต้องแก้
+// ════════════════════════════════════════════════════════════════
+
+function renderWellness() {
+  const w = state.data.wellness;
+  const el = $('#view-wellness');
+  if (!w || !w.title) {
+    el.innerHTML = '<div class="page-head"><p class="en">Wellness</p><h1>Wellness</h1></div><div class="card center muted">เร็วๆ นี้</div>';
+    return;
+  }
+  const svcIcon = (n) => /sauna|ซาวน่า|อบ/i.test(n) ? ICON.flame : ICON.snow;
+  el.innerHTML =
+    '<div class="page-head"><p class="en">Recovery & Wellness</p><h1>Wellness</h1></div>' +
+    wellnessCard(Object.assign({}, w, { title: w.title })).replace('class="well"', 'class="well" style="margin-top:0"') +
+    (w.about ? '<div class="card" style="margin-top:14px"><p style="white-space:pre-line">' + esc(w.about) + '</p></div>' : '') +
+    ((w.services || []).length ? '<div class="card"><div class="card-title">บริการ</div>' + w.services.map((x) =>
+      '<div class="svc"><span class="ic">' + svcIcon(x.name) + '</span><span><b>' + esc(x.name) + '</b>' +
+      (x.detail ? '<span>' + esc(x.detail) + '</span>' : '') + '</span></div>').join('') + '</div>' : '') +
+    priceCard(w.booking) +
+    (w.note ? '<div class="notice">' + ICON.info + '<div>' + esc(w.note) + '</div></div>' : '') +
+    wellnessCta(w);
+}
+
+/** ราคาตามจำนวนคน (จากแท็บ Wellness ราคา) */
+function priceCard(b) {
+  if (!b || !b.tiers || !b.tiers.length) return '';
+  return '<div class="card"><div class="card-title">ราคา <span class="muted small" style="font-weight:400">· รอบละ ' + b.sessionMin + ' นาที · ห้องส่วนตัว</span></div>' +
+    '<div class="price-list">' + b.tiers.map((t) =>
+      '<div><b>' + baht(t.price) + (t.max > 1 ? '<small style="font-size:11px;font-weight:500">/ท่าน</small>' : '') + '</b><span>' + esc(t.label) + '</span></div>').join('') + '</div>' +
+    (b.depositPct ? '<p class="muted small" style="margin-top:10px">มัดจำ ' + b.depositPct + '% ตอนจอง ส่วนที่เหลือชำระที่ร้าน</p>' : '') + '</div>';
+}
+
+/** ปุ่มจองตามสถานะ เปิดรับจอง / เฉพาะพนักงาน / ปิด */
+function wellnessCta(w) {
+  const b = w.booking;
+  const open = b && b.mode === 'เปิด' && b.tiers && b.tiers.length;
+  if (open) {
+    return '<button class="btn sea" data-go="book">' + ICON.calendar + 'จองคิว</button>' +
+      '<p class="muted small center" style="margin-top:10px">จองแล้ว ดูการจองของฉันได้ที่ปุ่มเดียวกัน</p>';
+  }
+  return '<button class="btn" disabled>' + esc(w.status || 'เปิดจองเร็วๆ นี้') + '</button>' +
+    '<p class="muted small center" style="margin-top:10px">ติดตามวันเปิดจองได้ทางแชท LINE ของร้าน</p>' +
+    (b && b.mode === 'เฉพาะพนักงาน' ? '<button class="btn ghost" data-go="book">ทดสอบระบบจอง (เฉพาะพนักงาน)</button>' : '');
+}
+
+function renderPromos() {
+  const promos = state.data.promos || [];
+  $('#view-promos').innerHTML = '<div class="page-head"><p class="en">Promotion</p><h1>โปรโมชั่น</h1></div>' +
+    (promos.length ? promos.map((p, i) => promoCard(p, i).replace('class="promo', 'class="promo full')).join('')
+      : '<div class="card center muted">ยังไม่มีโปรโมชั่นตอนนี้</div>');
 }
 
 function infoRow(icon, label, value, action, extra) {
@@ -950,6 +1386,7 @@ const ME_KEY = 'app2325:me:' + CONFIG.LIFF_ID;
 function saveMe(me) {
   state.me = me;
   store('set', ME_KEY, me);
+  renderHomeMember();
 }
 
 function cachedMe() {
@@ -1109,12 +1546,12 @@ function renderCard(m) {
 
 function fmtId(id) { return esc(String(id).replace(/^(\d{3})(\d{3})$/, '$1 $2')); }
 
-function drawQr(text) {
-  const box = $('#qr');
+function drawQr(text, target, size) {
+  const box = target || $('#qr');
   if (!box) return;
   box.innerHTML = '';
   try {
-    new QRCode(box, { text: String(text), width: 176, height: 176, colorDark: '#2B2A28', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(box, { text: String(text), width: size || 176, height: size || 176, colorDark: '#2B2A28', correctLevel: QRCode.CorrectLevel.M });
   } catch (e) {
     box.innerHTML = '<div class="qr-fallback">' + fmtId(text) + '</div>'; // โหลดตัวสร้าง QR ไม่ได้ → แสดงรหัสแทน
   }
@@ -1157,6 +1594,549 @@ async function refreshMe(showToast) {
 // กลับมาที่แอป (เช่น หลังพนักงานให้แต้ม) → อัปเดตเอง
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && state.page === 'reward' && state.me && state.me.member) refreshMe(false);
+});
+
+
+// ════════════════════════════════════════════════════════════════
+//  ส่วนที่ 10.5: จอง Wellness (ลูกค้า)   ⛔ ไม่ต้องแก้
+//  ขั้นตอน: เลือกคน/วัน/รอบ → ยืนยัน → โอนมัดจำ + แนบสลิป → ใบจอง
+// ════════════════════════════════════════════════════════════════
+
+const BST = { HOLD: 'รอชำระมัดจำ', SLIP: 'รอตรวจสลิป', OK: 'ยืนยันแล้ว', IN: 'เช็กอินแล้ว' };
+const TH_DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const TH_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+function isoParts(iso) {
+  const d = new Date(iso + 'T12:00:00Z');
+  return { dow: d.getUTCDay(), day: d.getUTCDate(), mon: d.getUTCMonth(), year: d.getUTCFullYear() };
+}
+function thDate(iso, withYear) {
+  const p = isoParts(iso);
+  return TH_DOW[p.dow] + ' ' + p.day + ' ' + TH_MON[p.mon] + (withYear ? ' ' + String(p.year + 543).slice(2) : '');
+}
+function isoToday() { return new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); }
+function bcfg() { return state.data && state.data.wellness && state.data.wellness.booking; }
+function bstPill(st) {
+  const cls = st === BST.OK ? 'ok' : st === BST.IN ? 'done' : st === BST.HOLD || st === BST.SLIP ? 'wait' : 'bad';
+  return '<span class="bst ' + cls + '">' + esc(st) + '</span>';
+}
+function li(label, valHtml, cls) {
+  return '<div class="li' + (cls ? ' ' + cls : '') + '"><span>' + esc(label) + '</span><b>' + valHtml + '</b></div>';
+}
+function bkHead(en, title, backLabel) {
+  return '<div class="bk-head"><button class="back" id="bk-back">' + ICON.arrow + esc(backLabel || 'ย้อนกลับ') + '</button>' +
+    '<p class="en">' + esc(en) + '</p><h1>' + esc(title) + '</h1></div>';
+}
+function onBack(fn) { const b = $('#bk-back'); if (b) b.onclick = fn; }
+function bkTitle() { return (state.data.wellness && state.data.wellness.title) || 'Wellness'; }
+
+/** ราคา: เลือกเรทตามจำนวนคน + มัดจำ + หักเครดิต (สูตรเดียวกับหลังบ้าน) */
+function calcBooking(people, credit) {
+  const b = bcfg();
+  const t = (b.tiers || []).find((x) => people >= x.min && people <= x.max);
+  if (!t) return null;
+  const total = t.price * people;
+  const deposit = Math.ceil((total * b.depositPct) / 100);
+  const used = Math.min(num(credit), total);
+  return { tier: t, total: total, deposit: deposit, used: used,
+    payDue: Math.max(0, deposit - used), payAtShop: total - deposit - Math.max(0, used - deposit) };
+}
+
+function policyLines(b) {
+  const out = [];
+  if (b.depositPct) out.push('ชำระมัดจำ ' + b.depositPct + '% ภายใน ' + b.holdMin + ' นาที มิฉะนั้นรอบจะถูกปล่อยให้คนอื่นจอง');
+  out.push('เลื่อนนัดได้ฟรี 1 ครั้ง ก่อนเวลาอย่างน้อย ' + b.cancelHours + ' ชม.');
+  out.push('ยกเลิกก่อน ' + b.cancelHours + ' ชม. มัดจำเก็บเป็นเครดิต ใช้จองครั้งถัดไปได้ภายใน ' + b.creditDays + ' วัน');
+  out.push('ยกเลิกน้อยกว่า ' + b.cancelHours + ' ชม. หรือไม่มาตามนัด ไม่คืนมัดจำ');
+  return out.concat(b.policyExtra || []);
+}
+
+/** เปิดหน้าจอง: มีรายการรอจ่าย → หน้าจ่าย · มีการจอง → รายการของฉัน · ไม่มี → เริ่มจอง */
+async function openBook() {
+  const el = $('#view-book');
+  const w = state.wb;
+  if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('จอง Wellness'); return; }
+  el.innerHTML = bkHead('Book · Wellness', 'จองคิว Wellness', 'Wellness') + spinner();
+  onBack(() => go('wellness', true));
+  loadSlots();
+  try {
+    await requireLogin('book');
+    await Promise.race([dataReady, new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT')), 35000))]);
+    w.mine = await api('wbMine');
+    if (state.page !== 'book') return;
+    const hold = w.mine.bookings.find((b) => b.status === BST.HOLD);
+    if (hold) return renderPay(hold);
+    if (w.mine.bookings.length) return renderBookList();
+    startPick();
+  } catch (e) {
+    pageError(el, e, openBook);
+  }
+}
+
+/** รอบว่าง (ไม่ต้องล็อกอิน · โหลดพร้อมกับการเชื่อม LINE) */
+async function loadSlots() {
+  const w = state.wb;
+  try {
+    const res = await fetch(CONFIG.API_URL + '?action=slots', { cache: 'no-store' });
+    const d = await res.json();
+    if (!d.ok) throw new Error(d.error || 'SERVER_ERROR');
+    w.days = d.days;
+    w.slotErr = '';
+  } catch (e) {
+    debug('โหลดรอบว่างไม่สำเร็จ: ' + e.message);
+    w.slotErr = /fetch|network|load failed/i.test(e.message) ? 'NETWORK' : e.message;
+    w.days = w.days || [];
+  }
+  if (state.page === 'book' && w.step === 'pick') renderPick();
+}
+
+async function reloadMine() {
+  state.wb.mine = await api('wbMine');
+  return state.wb.mine;
+}
+
+// ---------- 1) เลือกจำนวนคน วัน รอบ ----------
+function startPick(resched) {
+  const w = state.wb;
+  w.resched = resched || null;
+  w.people = resched ? resched.people : Math.max(1, w.people || 1);
+  w.date = '';
+  w.time = '';
+  w.step = 'pick';
+  renderPick();
+  window.scrollTo(0, 0);
+  loadSlots();
+}
+
+function renderPick() {
+  const w = state.wb;
+  const b = bcfg();
+  const el = $('#view-book');
+  if (!b || !b.tiers || !b.tiers.length) {
+    el.innerHTML = bkHead('Book · Wellness', 'จองคิว Wellness', 'Wellness') + '<div class="card center muted">ยังไม่เปิดระบบจอง</div>';
+    onBack(() => go('wellness', true));
+    return;
+  }
+  const staffOnly = b.mode === 'เฉพาะพนักงาน' && !(w.mine && w.mine.isStaff);
+  if (!w.resched && (b.mode === 'ปิด' || staffOnly)) {
+    el.innerHTML = bkHead('Book · Wellness', 'จองคิว Wellness', 'Wellness') +
+      '<div class="card center"><p class="card-title">ยังไม่เปิดรับจองตอนนี้</p><p class="muted small">ติดตามวันเปิดจองได้ทางแชท LINE ของร้าน</p></div>';
+    onBack(() => go('wellness', true));
+    return;
+  }
+  const credit = w.resched ? 0 : (w.mine ? w.mine.credit : 0);
+  const c = calcBooking(w.people, credit);
+  const days = w.days;
+  if (days && !w.date) {
+    const d = days.find((x) => x.slots.some((s) => s.s === 'free'));
+    if (d) w.date = d.date;
+  }
+  const keepScroll = $('#days') ? $('#days').scrollLeft : null;
+
+  let h = bkHead(w.resched ? 'Reschedule' : 'Book · ' + bkTitle(), w.resched ? 'เลื่อนนัด' : 'จองคิว Wellness',
+    w.resched ? 'การจองของฉัน' : (w.mine && w.mine.bookings.length ? 'การจองของฉัน' : 'Wellness'));
+  if (b.mode === 'เฉพาะพนักงาน') h += '<div class="notice">' + ICON.info + '<div>โหมดทดสอบ: ลูกค้ายังจองไม่ได้ เฉพาะพนักงานเท่านั้น</div></div>';
+  if (w.resched) {
+    h += '<div class="notice">' + ICON.calendar + '<div>เลื่อนจาก <b>' + thDate(w.resched.date) + ' · ' + w.resched.time + ' น.</b><br>' +
+      '<span class="small">เลื่อนได้ฟรี 1 ครั้ง · ' + w.resched.people + ' ท่าน</span></div></div>';
+  } else if (credit) {
+    h += '<div class="notice">' + ICON.gift + '<div>มีเครดิตมัดจำ <b>' + baht(credit) + '.-</b> หักให้อัตโนมัติ</div></div>';
+  }
+
+  // จำนวนคน
+  if (!w.resched) {
+    h += '<div class="card"><div class="card-title">จำนวนผู้ใช้บริการ</div><div class="tiers">' + b.tiers.map((t) =>
+      '<div class="tier' + (c && c.tier === t ? ' on' : '') + '"><b>' + esc(t.label) + '</b><span>' + baht(t.price) + '.-' + (t.max > 1 ? '/ท่าน' : '') + '</span></div>').join('') +
+      '</div><div class="stepper"><button id="pp-minus" aria-label="ลดจำนวน"' + (w.people <= 1 ? ' disabled' : '') + '>−</button>' +
+      '<div class="n"><b>' + w.people + '</b><span>ท่าน · ห้องส่วนตัวทั้งรอบ</span></div>' +
+      '<button id="pp-plus" aria-label="เพิ่มจำนวน"' + (w.people >= b.maxPeople || !calcBooking(w.people + 1, 0) ? ' disabled' : '') + '>+</button></div></div>';
+  }
+
+  // วันที่
+  const sel = w.date ? isoParts(w.date) : null;
+  h += '<div class="card"><div class="card-title">วันที่' + (sel ? ' <span class="muted small" style="font-weight:400">· ' + TH_MON[sel.mon] + ' ' + (sel.year + 543) + '</span>' : '') + '</div>';
+  if (!days) h += '<div class="skeleton" style="height:66px"></div>';
+  else if (!days.length) h += '<p class="muted small">' + (w.slotErr ? errText(new Error(w.slotErr)) : 'ยังไม่มีรอบให้จอง') + '</p><button class="btn soft" id="slots-retry" style="margin-top:10px">ลองใหม่</button>';
+  else {
+    h += '<div class="days" id="days">' + days.map((d) => {
+      const p = isoParts(d.date);
+      const free = d.slots.filter((s) => s.s === 'free').length;
+      const lab = !d.slots.length ? 'ปิด' : free ? 'ว่าง ' + free : 'เต็ม';
+      return '<button class="day' + (d.date === w.date ? ' on' : '') + '" data-day="' + d.date + '"' + (free ? '' : ' disabled') + '>' +
+        '<small>' + (d.date === isoToday() ? 'วันนี้' : TH_DOW[p.dow]) + '</small><b>' + p.day + '</b><i>' + lab + '</i></button>';
+    }).join('') + '</div>';
+  }
+  h += '</div>';
+
+  // รอบเวลา
+  const day = days && days.find((d) => d.date === w.date);
+  h += '<div class="card"><div class="card-title">รอบเวลา <span class="muted small" style="font-weight:400">· ใช้บริการ ' + b.sessionMin + ' นาที</span></div>';
+  if (!days) h += '<div class="skeleton" style="height:120px"></div>';
+  else if (!day) h += '<p class="muted small">เลือกวันที่ก่อน</p>';
+  else {
+    const list = day.slots.filter((s) => s.s !== 'past');
+    h += '<div class="slots">' + list.map((s) => {
+      const on = s.t === w.time;
+      return '<button class="slot' + (on ? ' on' : '') + '" data-slot="' + s.t + '"' + (s.s === 'free' ? '' : ' disabled') + '>' + s.t +
+        '<small>' + (on ? 'เลือกแล้ว' : s.s === 'free' ? 'ว่าง' : 'เต็ม') + '</small></button>';
+    }).join('') + '</div>';
+    if (list.length < day.slots.length) h += '<p class="muted small" style="margin-top:10px">รอบที่ใกล้เวลาหรือผ่านไปแล้วจองไม่ได้</p>';
+  }
+  h += '</div>';
+
+  // แถบสรุปด้านล่าง
+  let sum;
+  if (w.resched) sum = (w.time ? thDate(w.date) + ' · ' + w.time + ' น.' : 'เลือกวันและรอบใหม่') + '<b>เลื่อนนัด</b>';
+  else if (c) sum = w.people + ' ท่าน × ' + baht(c.tier.price) + ' = ' + baht(c.total) + '.-<b>' + (c.used ? 'โอนมัดจำ ' + baht(c.payDue) : 'มัดจำ ' + baht(c.deposit)) + '.-</b>';
+  else sum = '<b>ไม่มีราคาสำหรับ ' + w.people + ' ท่าน</b>';
+  h += '<div class="bbar"><div class="in"><div class="l">' + sum + '</div>' +
+    '<button class="btn" id="bk-next"' + (w.time && (c || w.resched) ? '' : ' disabled') + '>' + (w.resched ? 'ยืนยันเลื่อน' : 'ถัดไป') + '</button></div></div>';
+
+  el.innerHTML = h;
+  document.body.classList.add('has-bbar');
+  if (keepScroll != null && $('#days')) $('#days').scrollLeft = keepScroll;
+  else if ($('#days .day.on')) $('#days .day.on').scrollIntoView({ block: 'nearest', inline: 'center' });
+
+  onBack(() => {
+    if (w.resched) return renderTicket(w.resched);
+    if (w.mine && w.mine.bookings.length) return renderBookList();
+    go('wellness', true);
+  });
+  if ($('#pp-minus')) $('#pp-minus').onclick = () => { w.people = Math.max(1, w.people - 1); renderPick(); };
+  if ($('#pp-plus')) $('#pp-plus').onclick = () => { w.people = Math.min(b.maxPeople, w.people + 1); renderPick(); };
+  if ($('#slots-retry')) $('#slots-retry').onclick = () => { w.days = null; renderPick(); loadSlots(); };
+  el.querySelectorAll('[data-day]').forEach((x) => (x.onclick = () => { w.date = x.dataset.day; w.time = ''; renderPick(); }));
+  el.querySelectorAll('[data-slot]').forEach((x) => (x.onclick = () => { w.time = x.dataset.slot; renderPick(); }));
+  $('#bk-next').onclick = () => (w.resched ? doReschedule() : renderConfirm());
+}
+
+// ---------- 2) ยืนยัน + เงื่อนไข ----------
+function renderConfirm() {
+  const w = state.wb;
+  const b = bcfg();
+  const c = calcBooking(w.people, w.mine ? w.mine.credit : 0);
+  const contact = (w.mine && w.mine.contact) || {};
+  w.step = 'confirm';
+  document.body.classList.remove('has-bbar');
+
+  let h = bkHead('Confirm', 'ยืนยันการจอง');
+  h += '<div class="card">' +
+    li('บริการ', esc(bkTitle()) + ' · ' + b.sessionMin + ' นาที') +
+    li('วัน-เวลา', thDate(w.date) + ' · ' + w.time + ' น.') +
+    li('จำนวน', w.people + ' ท่าน × ' + baht(c.tier.price) + '.-') +
+    li('ยอดรวม', baht(c.total) + '.-', 'big') +
+    (c.used ? li('หักเครดิตมัดจำ', '−' + baht(c.used) + '.-') : '') +
+    li(c.used ? 'โอนมัดจำตอนนี้' : 'มัดจำตอนนี้ (' + b.depositPct + '%)', baht(c.payDue) + '.-', 'dep') +
+    li('ชำระที่ร้าน', baht(c.payAtShop) + '.-') + '</div>';
+  h += '<div class="card"><div class="card-title">ข้อมูลผู้จอง</div>' +
+    '<label class="f" for="bk-name" style="margin-top:0">ชื่อ</label><input class="input" id="bk-name" maxlength="40" autocomplete="name" value="' + esc(contact.name || '') + '">' +
+    '<label class="f" for="bk-phone">เบอร์โทร</label><input class="input" id="bk-phone" type="tel" inputmode="numeric" maxlength="12" placeholder="08x-xxx-xxxx" autocomplete="tel" value="' + esc(contact.phone || '') + '"></div>';
+  h += '<div class="card"><div class="card-title">เงื่อนไขการจอง</div><ul class="rules">' +
+    policyLines(b).map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' +
+    '<label class="check"><input type="checkbox" id="bk-ok1"><span>ยอมรับเงื่อนไขการจอง</span></label>' +
+    (b.healthText ? '<label class="check" style="margin-top:0"><input type="checkbox" id="bk-ok2"><span>' + esc(b.healthText) + '</span></label>' : '') + '</div>';
+  h += '<button class="btn sea" id="bk-go">' + (c.payDue > 0 ? 'ไปชำระมัดจำ ' + baht(c.payDue) + '.-' : 'ยืนยันการจอง') + '</button>';
+
+  $('#view-book').innerHTML = h;
+  window.scrollTo(0, 0);
+  onBack(() => { w.step = 'pick'; renderPick(); });
+  $('#bk-go').onclick = async () => {
+    const name = $('#bk-name').value.trim();
+    const phone = $('#bk-phone').value.replace(/\D/g, '');
+    if (!name) return toast('กรุณากรอกชื่อ', 'error');
+    if (!/^0\d{8,9}$/.test(phone)) return toast('เบอร์โทรไม่ถูกต้อง', 'error');
+    if (!$('#bk-ok1').checked || ($('#bk-ok2') && !$('#bk-ok2').checked)) return toast('กรุณาติ๊กยอมรับเงื่อนไข', 'error');
+    const btn = $('#bk-go');
+    btn.disabled = true; btn.textContent = 'กำลังจอง…';
+    try {
+      const out = await api('wbCreate', { date: w.date, time: w.time, people: w.people, name: name, phone: phone, agree: true });
+      w.mine = null;
+      if (out.booking.status === BST.HOLD) renderPay(out.booking);
+      else { renderTicket(out.booking); toast('จองเรียบร้อย ✅', 'ok'); }
+    } catch (e) {
+      if (e.message === 'REDIRECTING') return;
+      toast(errText(e), 'error');
+      if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; w.step = 'pick'; renderPick(); loadSlots(); return; }
+      btn.disabled = false; btn.textContent = c.payDue > 0 ? 'ไปชำระมัดจำ ' + baht(c.payDue) + '.-' : 'ยืนยันการจอง';
+    }
+  };
+}
+
+// ---------- 3) โอนมัดจำ + แนบสลิป ----------
+let payTimer;
+function renderPay(bk) {
+  const w = state.wb;
+  const b = bcfg();
+  w.step = 'pay';
+  w.booking = bk;
+  w.slip = '';
+  document.body.classList.remove('has-bbar');
+
+  let h = bkHead('Deposit', 'ชำระมัดจำ', 'การจองของฉัน');
+  h += '<div class="card center"><span class="timer" id="pay-timer">' + ICON.clock + '<span>--:--</span></span>' +
+    '<div class="payqr" id="pay-qr"></div>' +
+    '<div class="amt"><small>ยอดที่ต้องโอน</small><b>' + num(bk.payDue).toLocaleString('th-TH', { minimumFractionDigits: 2 }) + '</b>' +
+    '<small>' + esc([b.payName ? 'ชื่อบัญชี ' + b.payName : '', b.promptpay ? 'QR มียอดเงินในตัว' : ''].filter(Boolean).join(' · ')) + '</small></div>' +
+    '<p class="muted small" style="margin-top:10px">แคปหน้าจอ QR แล้วเปิดแอปธนาคาร > สแกน > เลือกรูปจากอัลบั้ม</p>' +
+    '<label class="up" id="up-box"><input type="file" accept="image/*" id="slip-file"><div id="up-in"><b>📎 แนบสลิปการโอน</b>แตะเพื่อเลือกรูปจากอัลบั้ม</div></label>' +
+    '<button class="btn sea" id="slip-send" style="margin-top:14px" disabled>ส่งสลิป</button></div>';
+  h += '<div class="card">' + li('วัน-เวลา', thDate(bk.date) + ' · ' + bk.time + '–' + bk.end + ' น.') +
+    li('จำนวน', bk.people + ' ท่าน') + li('ยอดรวม', baht(bk.total) + '.-') +
+    (bk.credit ? li('หักเครดิตมัดจำ', '−' + baht(bk.credit) + '.-') : '') +
+    li('ชำระที่ร้าน', baht(bk.payAtShop) + '.-') + li('รหัสจอง', esc(bk.id)) + '</div>';
+  h += '<button class="btn ghost" id="bk-cancel">ยกเลิกการจองนี้</button>';
+  $('#view-book').innerHTML = h;
+  window.scrollTo(0, 0);
+  onBack(async () => { await showMine(); });
+
+  // QR รับเงิน: พร้อมเพย์ (มียอดเงิน) → รูป QR ที่อัปโหลด → ยังไม่ตั้งค่า
+  const q = $('#pay-qr');
+  if (b.promptpay) {
+    q.innerHTML = '<div id="pp-qr"></div>';
+    drawQr(promptpayPayload(b.promptpay, num(bk.payDue)), $('#pp-qr'), 220);
+  } else if (b.qrImage) {
+    q.innerHTML = '<img src="' + esc(sizedImg(b.qrImage, 700)) + '" alt="QR รับเงิน">';
+  } else {
+    q.innerHTML = '<div class="muted small" style="padding:22px">ร้านยังไม่ได้ตั้งค่าช่องทางรับเงิน<br>กรุณาติดต่อร้านทางแชท LINE</div>';
+  }
+
+  // นับถอยหลัง
+  clearInterval(payTimer);
+  const tick = () => {
+    if (state.page !== 'book' || w.step !== 'pay' || w.booking !== bk) return clearInterval(payTimer);
+    const left = num(bk.holdUntil) - Date.now();
+    const t = $('#pay-timer span');
+    if (left > 0) {
+      t.textContent = 'เหลือเวลา ' + Math.floor(left / 60000) + ':' + ('0' + Math.floor((left % 60000) / 1000)).slice(-2);
+    } else if (left > -5 * 60000) {
+      t.textContent = 'หมดเวลาแล้ว · โอนแล้วส่งสลิปได้ทันที';
+    } else {
+      clearInterval(payTimer);
+      $('#view-book').innerHTML = bkHead('Deposit', 'หมดเวลาชำระ', 'การจองของฉัน') +
+        '<div class="card center"><p class="card-title">หมดเวลาชำระมัดจำ</p><p class="muted small">รอบนี้ถูกปล่อยให้คนอื่นจองแล้ว<br>ถ้าโอนเงินไปแล้ว กรุณาติดต่อร้านทางแชท LINE</p></div>' +
+        '<button class="btn sea" id="bk-again">จองใหม่</button>';
+      onBack(showMine);
+      $('#bk-again').onclick = () => { w.mine = null; openBook(); };
+    }
+  };
+  tick();
+  payTimer = setInterval(tick, 1000);
+
+  $('#slip-file').onchange = async (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    $('#up-in').innerHTML = '<b>กำลังเตรียมรูป…</b>';
+    try {
+      w.slip = await compressImage(f);
+      $('#up-in').innerHTML = '<img src="' + w.slip + '" alt="สลิป">แตะเพื่อเปลี่ยนรูป';
+      $('#slip-send').disabled = false;
+    } catch (e) {
+      $('#up-in').innerHTML = '<b>📎 แนบสลิปการโอน</b>อ่านรูปไม่ได้ ลองเลือกรูปใหม่';
+    }
+  };
+  $('#slip-send').onclick = async () => {
+    const btn = $('#slip-send');
+    btn.disabled = true; btn.textContent = 'กำลังส่ง…';
+    try {
+      const out = await api('wbSlip', { bookingId: bk.id, image: w.slip });
+      w.mine = null;
+      renderTicket(out.booking);
+      toast('ส่งสลิปแล้ว รอร้านยืนยันทาง LINE', 'ok');
+    } catch (e) {
+      if (e.message === 'REDIRECTING') return;
+      toast(errText(e), 'error');
+      btn.disabled = false; btn.textContent = 'ส่งสลิป';
+    }
+  };
+  $('#bk-cancel').onclick = () => cancelBooking(bk);
+}
+
+/** ย่อรูปสลิปก่อนส่ง (กว้างสุด 1400px · JPEG) */
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1400 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k);
+      c.height = Math.round(img.naturalHeight * k);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('BAD_IMAGE')); };
+    img.src = url;
+  });
+}
+
+/** PromptPay QR (มาตรฐาน EMVCo) พร้อมยอดเงิน */
+function promptpayPayload(id, amount) {
+  const f = (tag, v) => tag + ('0' + v.length).slice(-2) + v;
+  const d = String(id).replace(/\D/g, '');
+  const acc = d.length >= 13 ? f(d.length === 15 ? '03' : '02', d)
+    : f('01', ('0000000000000' + d.replace(/^0/, '66')).slice(-13));
+  const p = f('00', '01') + f('01', amount ? '12' : '11') + f('29', f('00', 'A000000677010111') + acc) +
+    f('58', 'TH') + f('53', '764') + (amount ? f('54', amount.toFixed(2)) : '') + '6304';
+  return p + crc16(p);
+}
+function crc16(s) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < s.length; i++) {
+    crc ^= s.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+  }
+  return ('000' + crc.toString(16).toUpperCase()).slice(-4);
+}
+
+// ---------- 4) ใบจอง ----------
+function renderTicket(bk) {
+  const w = state.wb;
+  w.step = 'ticket';
+  w.booking = bk;
+  document.body.classList.remove('has-bbar');
+  const active = [BST.HOLD, BST.SLIP, BST.OK].indexOf(bk.status) >= 0;
+  const paid = bk.credit + (bk.status === BST.HOLD ? 0 : bk.payDue);
+  const svc = ((state.data && state.data.services) || []).find((s) => s.id === 'icebath');
+
+  let h = bkHead('My Booking', 'การจองของฉัน', 'การจองทั้งหมด');
+  h += '<div class="ticket">' + bstPill(bk.status) +
+    '<h2>' + esc(bkTitle()) + '</h2><p>ห้องส่วนตัว · ' + bk.people + ' ท่าน</p>' +
+    '<div class="grid"><div><small>วันที่</small><b>' + thDate(bk.date, true) + '</b></div>' +
+    '<div><small>เวลา</small><b>' + bk.time + ' – ' + bk.end + '</b></div>' +
+    '<div><small>' + (bk.status === BST.HOLD ? 'มัดจำที่ต้องโอน' : 'ชำระมัดจำแล้ว') + '</small><b>' + baht(bk.status === BST.HOLD ? bk.payDue : paid) + '.-</b></div>' +
+    '<div><small>ชำระที่ร้าน</small><b>' + baht(bk.payAtShop) + '.-</b></div></div>' +
+    (active || bk.status === BST.IN ? '<div class="tq"><div id="tk-qr"></div></div><div class="cap">แสดง QR นี้เมื่อถึงร้าน · ' + esc(bk.id) + '</div>'
+      : '<div class="cap">' + esc(bk.id) + '</div>') + '</div>';
+
+  if (active || bk.status === BST.IN) {
+    const st = (on, wait) => (on ? 'y' : wait ? 'w' : '');
+    const steps = [
+      ['จองรอบแล้ว', 'y'],
+      [bk.payDue > 0 ? 'ส่งสลิปมัดจำแล้ว' : 'ชำระด้วยเครดิตมัดจำ', st(bk.status !== BST.HOLD, bk.status === BST.HOLD)],
+      ['ร้านยืนยันการชำระ (แจ้งทาง LINE)', st(bk.status === BST.OK || bk.status === BST.IN, bk.status === BST.SLIP)],
+      ['เช็กอินที่ร้าน' + (svc ? ' · รับแต้มสะสม' : ''), st(bk.status === BST.IN, false)],
+    ];
+    h += '<div class="card tl">' + steps.map((x) => '<div><i class="' + x[1] + '"></i>' + esc(x[0]) + '</div>').join('') + '</div>';
+  }
+  if (bk.creditLeft > 0) {
+    h += '<div class="notice">' + ICON.gift + '<div>มัดจำ <b>' + baht(bk.creditLeft) + '.-</b> เก็บเป็นเครดิต' +
+      (bk.creditExpiry ? ' ใช้ได้ถึง ' + thDate(bk.creditExpiry, true) : '') + ' · หักให้อัตโนมัติตอนจองครั้งถัดไป</div></div>';
+  }
+  if (bk.status === BST.HOLD) h += '<button class="btn sea" id="tk-pay">ไปชำระมัดจำ</button>';
+  const btns = [];
+  if (bk.canReschedule) btns.push('<button class="btn line" id="tk-move">เลื่อนนัด</button>');
+  if (bk.canCancel) btns.push('<button class="btn line" id="tk-cancel">ยกเลิก</button>');
+  if (btns.length) h += '<div class="btn-row">' + btns.join('') + '</div>';
+  if (bk.status === BST.SLIP) h += '<p class="muted small center" style="margin-top:10px">ยกเลิกได้หลังร้านตรวจสลิปแล้ว</p>';
+  else if (bk.status === BST.OK && !bk.canReschedule) {
+    h += '<p class="muted small center" style="margin-top:10px">' + (bk.reschedules ? 'ใช้สิทธิ์เลื่อนนัดแล้ว' : 'เลื่อนนัดได้ก่อนเวลา ' + bcfg().cancelHours + ' ชม.') + ' · ติดต่อร้านทางแชทได้</p>';
+  }
+
+  $('#view-book').innerHTML = h;
+  window.scrollTo(0, 0);
+  if ($('#tk-qr')) drawQr(bk.id, $('#tk-qr'), 140);
+  onBack(showMine);
+  if ($('#tk-pay')) $('#tk-pay').onclick = () => renderPay(bk);
+  if ($('#tk-move')) $('#tk-move').onclick = () => startPick(bk);
+  if ($('#tk-cancel')) $('#tk-cancel').onclick = () => cancelBooking(bk);
+}
+
+async function cancelBooking(bk) {
+  const b = bcfg();
+  let msg = 'ยกเลิกการจอง ' + thDate(bk.date) + ' ' + bk.time + ' น.?';
+  if (bk.status === BST.OK) {
+    msg += bk.cancelGetsCredit
+      ? '\n\nมัดจำ ' + baht(bk.credit + bk.payDue) + ' บาท จะเก็บเป็นเครดิต ใช้ได้ ' + b.creditDays + ' วัน'
+      : '\n\nเหลือเวลาน้อยกว่า ' + b.cancelHours + ' ชม. จะไม่ได้รับมัดจำคืน';
+  }
+  if (!confirm(msg)) return;
+  try {
+    const out = await api('wbCancel', { bookingId: bk.id });
+    toast(out.credit ? 'ยกเลิกแล้ว · ได้เครดิต ' + baht(out.credit) + ' บาท' : 'ยกเลิกแล้ว', 'ok');
+    state.wb.mine = null;
+    await showMine();
+  } catch (e) {
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+  }
+}
+
+async function doReschedule() {
+  const w = state.wb;
+  const btn = $('#bk-next');
+  btn.disabled = true; btn.textContent = 'กำลังเลื่อน…';
+  try {
+    const out = await api('wbReschedule', { bookingId: w.resched.id, date: w.date, time: w.time });
+    w.mine = null;
+    renderTicket(out.booking);
+    toast('เลื่อนนัดเรียบร้อย ✅', 'ok');
+  } catch (e) {
+    if (e.message === 'REDIRECTING') return;
+    toast(errText(e), 'error');
+    if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; loadSlots(); }
+    btn.disabled = false; btn.textContent = 'ยืนยันเลื่อน';
+  }
+}
+
+// ---------- รายการจองของฉัน ----------
+async function showMine() {
+  const w = state.wb;
+  clearInterval(payTimer);
+  if (!w.mine) {
+    $('#view-book').innerHTML = bkHead('My Booking', 'การจองของฉัน', 'Wellness') + spinner();
+    onBack(() => go('wellness', true));
+    try { await reloadMine(); } catch (e) { return pageError($('#view-book'), e, showMine); }
+  }
+  if (!w.mine.bookings.length && !w.mine.past.length && !w.mine.credit) return startPick();
+  renderBookList();
+}
+
+function bookingItem(bk, attr) {
+  const p = isoParts(bk.date);
+  return '<button class="bitem" ' + attr + '="' + esc(bk.id) + '"><span class="dt"><small>' + TH_DOW[p.dow] + '</small><b>' + p.day + '</b></span>' +
+    '<span class="bd"><b>' + bk.time + '–' + bk.end + ' · ' + (bk.name ? esc(bk.name) + ' · ' : '') + bk.people + ' ท่าน</b>' +
+    '<span>' + TH_MON[p.mon] + ' </span>' + bstPill(bk.status) + '</span>' +
+    '<span class="muted" style="width:20px;flex:none">' + ICON.arrow + '</span></button>';
+}
+
+function renderBookList() {
+  const w = state.wb;
+  const m = w.mine;
+  w.step = 'list';
+  document.body.classList.remove('has-bbar');
+  let h = bkHead('My Booking', 'การจองของฉัน', 'Wellness');
+  if (m.credit) h += '<div class="notice">' + ICON.gift + '<div>เครดิตมัดจำ <b>' + baht(m.credit) + '.-</b> หักให้อัตโนมัติตอนจองครั้งถัดไป</div></div>';
+  h += '<div class="card"><div class="card-title">กำลังจะมาถึง</div>' +
+    (m.bookings.length ? m.bookings.map((b) => bookingItem(b, 'data-bk')).join('') : '<p class="muted small">ยังไม่มีการจอง</p>') + '</div>';
+  if (m.past.length) h += '<div class="card"><div class="card-title">ที่ผ่านมา</div>' + m.past.map((b) => bookingItem(b, 'data-bk')).join('') + '</div>';
+  h += '<button class="btn sea" id="bk-new">' + ICON.calendar + 'จองรอบใหม่</button>';
+  $('#view-book').innerHTML = h;
+  window.scrollTo(0, 0);
+  onBack(() => go('wellness', true));
+  $('#bk-new').onclick = () => startPick();
+  document.querySelectorAll('#view-book [data-bk]').forEach((x) => (x.onclick = () => {
+    const bk = m.bookings.concat(m.past).find((b) => b.id === x.dataset.bk);
+    if (!bk) return;
+    if (bk.status === BST.HOLD) renderPay(bk); else renderTicket(bk);
+  }));
+}
+
+// กลับมาที่แอป (เช่น หลังร้านยืนยันทาง LINE) → อัปเดตสถานะเอง
+document.addEventListener('visibilitychange', async () => {
+  const w = state.wb;
+  if (document.visibilityState !== 'visible' || state.page !== 'book' || (w.step !== 'ticket' && w.step !== 'list')) return;
+  try {
+    const m = await reloadMine();
+    if (state.page !== 'book') return;
+    if (w.step === 'list') renderBookList();
+    else if (w.step === 'ticket' && w.booking) {
+      const bk = m.bookings.concat(m.past).find((b) => b.id === w.booking.id);
+      if (bk && bk.status !== w.booking.status) renderTicket(bk);
+    }
+  } catch (e) { debug('อัปเดตการจองไม่สำเร็จ: ' + e.message); }
 });
 
 
@@ -1205,11 +2185,115 @@ function renderStaffHome() {
     '<button class="btn gold" id="btn-scan">' + ICON.scan + 'สแกน QR ลูกค้า</button>' +
     '<form id="f-find" style="margin-top:12px"><div class="row">' +
     '<input class="input" id="q" type="tel" inputmode="numeric" maxlength="12" placeholder="รหัสสมาชิก / เบอร์โทร" style="flex:2">' +
-    '<button class="btn soft" type="submit" style="flex:1">ค้นหา</button></div></form></div>' +
-    '<div id="s-member"></div>';
+    '<button class="btn soft" type="submit" style="flex:1">ค้นหา</button></div></form>' +
+    '<p class="muted small" style="margin-top:8px">สแกนได้ทั้ง QR สมาชิก และ QR การจอง Wellness</p></div>' +
+    '<div id="s-member"></div><div id="s-well-wrap"></div>';
 
   $('#btn-scan').onclick = scanQr;
   $('#f-find').onsubmit = (ev) => { ev.preventDefault(); const q = $('#q').value.trim(); if (q) lookup(q); };
+  dataReady.then(mountStaffWell); // ต้องรอข้อมูลร้านก่อน (รู้ว่าเปิดระบบจองไหม)
+}
+
+function mountStaffWell() {
+  const wrap = $('#s-well-wrap');
+  if (!bcfg() || !wrap || $('#s-well')) return;
+  wrap.innerHTML = '<div class="card"><div class="card-title">การจอง Wellness</div><div id="s-well"></div></div>';
+  loadStaffBookings();
+}
+
+// ---------- พนักงาน: การจอง Wellness ----------
+async function loadStaffBookings() {
+  const box = $('#s-well');
+  if (!box) return;
+  box.innerHTML = '<div class="skeleton" style="height:60px"></div>';
+  try {
+    state.staffWb = await api('wbStaffList');
+    renderStaffBookings();
+  } catch (e) {
+    if (e.message !== 'REDIRECTING') box.innerHTML = '<p class="muted small">' + errText(e) + '</p>';
+  }
+}
+
+function renderStaffBookings() {
+  const box = $('#s-well');
+  const out = state.staffWb;
+  if (!box || !out) return;
+  const today = isoToday();
+  const todays = out.upcoming.filter((b) => b.date === today);
+  const later = out.upcoming.filter((b) => b.date > today);
+  const group = (title, list, empty) => '<p class="small" style="font-weight:600;margin:14px 0 4px">' + title + ' (' + list.length + ')</p>' +
+    (list.length ? list.map((b) => bookingItem(b, 'data-sb')).join('') : '<p class="muted small">' + empty + '</p>');
+  box.innerHTML = group('🧾 รอตรวจสลิป', out.pending, 'ไม่มีสลิปรอตรวจ').replace('margin:14px', 'margin:0') +
+    group('วันนี้', todays, 'ไม่มีคิววันนี้') + group('วันถัดไป', later, 'ยังไม่มีการจอง') +
+    '<button class="btn ghost" id="btn-wb-reload">โหลดใหม่</button>';
+  box.querySelectorAll('[data-sb]').forEach((x) => (x.onclick = () => openStaffBooking(x.dataset.sb)));
+  $('#btn-wb-reload').onclick = loadStaffBookings;
+}
+
+async function openStaffBooking(id) {
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg';
+  bg.innerHTML = '<div class="sheet left">' + spinner() + '</div>';
+  bg.addEventListener('click', (e) => { if (e.target === bg) bg.remove(); });
+  document.body.appendChild(bg);
+  try {
+    const out = await api('wbStaffGet', { bookingId: id, withSlip: true });
+    renderStaffBookingSheet(bg, out.booking, out.slipImage);
+  } catch (e) {
+    bg.remove();
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+  }
+}
+
+function renderStaffBookingSheet(bg, b, slip) {
+  const acts = {
+    [BST.SLIP]: '<button class="btn gold" data-op="confirm">✅ สลิปถูกต้อง · ยืนยันการจอง</button>' +
+      '<div class="btn-row"><button class="btn line" data-op="reject">สลิปไม่ผ่าน</button><button class="btn line" data-op="checkin">เช็กอินเลย</button></div>',
+    [BST.OK]: '<button class="btn gold" data-op="checkin">เช็กอิน · ลูกค้ามาถึงแล้ว</button>' +
+      '<div class="btn-row"><button class="btn line" data-op="noshow">ไม่มาตามนัด</button><button class="btn line" data-op="shopcancel">ร้านยกเลิก</button></div>',
+    [BST.HOLD]: '<p class="muted small" style="margin-bottom:8px">ลูกค้ายังไม่ส่งสลิป (ระบบปล่อยรอบเองเมื่อหมดเวลา)</p>' +
+      '<button class="btn line" data-op="shopcancel">ร้านยกเลิก</button>',
+  }[b.status] || '';
+  bg.querySelector('.sheet').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">คุณ' + esc(b.name) + '</h3>' + bstPill(b.status) + '</div>' +
+    '<div class="card" style="margin:12px 0">' +
+    li('วัน-เวลา', thDate(b.date) + ' · ' + b.time + '–' + b.end + ' น.') +
+    li('จำนวน', b.people + ' ท่าน × ' + baht(b.pricePer) + '.-') +
+    li('ยอดรวม', baht(b.total) + '.-') +
+    (b.credit ? li('ใช้เครดิตมัดจำ', baht(b.credit) + '.-') : '') +
+    li('ยอดโอนมัดจำ', baht(b.payDue) + '.-', 'dep') +
+    li('เก็บเงินที่ร้าน', baht(b.payAtShop) + '.-', 'big') +
+    li('เบอร์โทร', '<a href="tel:' + esc(b.phone) + '" style="color:var(--gold)">' + esc(b.phone) + '</a>') +
+    li('รหัสจอง', esc(b.id)) +
+    (b.memberId ? li('สมาชิก', fmtId(b.memberId)) : '') +
+    (b.note ? '<div class="li"><span>หมายเหตุ</span><b style="white-space:pre-line;font-weight:400;font-size:13px">' + esc(b.note) + '</b></div>' : '') + '</div>' +
+    (b.hasSlip ? '<p class="small" style="font-weight:600">สลิปมัดจำ · ตรวจยอด ' + baht(b.payDue) + ' บาท</p>' +
+      (slip ? '<img class="slip-img" src="' + slip + '" alt="สลิป">' : '<p class="muted small">โหลดรูปสลิปไม่ได้ · ดูได้ในโฟลเดอร์สลิปใน Google Drive</p>') : '') +
+    '<div style="margin-top:14px">' + acts + '</div>' +
+    '<button class="btn soft" id="sb-close" style="margin-top:10px">ปิด</button>';
+  bg.querySelector('#sb-close').onclick = () => bg.remove();
+  bg.querySelectorAll('[data-op]').forEach((x) => (x.onclick = () => staffBookingAction(bg, b, x.dataset.op)));
+}
+
+async function staffBookingAction(bg, b, op) {
+  const ask = {
+    reject: 'สลิปไม่ผ่าน?\nการจองจะถูกยกเลิก และแจ้งลูกค้าทาง LINE',
+    noshow: 'บันทึกว่าลูกค้าไม่มาตามนัด?\n(ไม่คืนมัดจำ)',
+    shopcancel: 'ร้านยกเลิกการจองนี้?\nแจ้งลูกค้าทาง LINE' + (b.hasSlip && b.payDue ? ' · ต้องโอนคืน ' + baht(b.payDue) + ' บาท' : ''),
+  }[op];
+  if (ask && !confirm(ask)) return;
+  bg.querySelectorAll('button').forEach((x) => (x.disabled = true));
+  try {
+    const out = await api('wbStaffAction', { bookingId: b.id, op: op });
+    const msg = { confirm: 'ยืนยันแล้ว · แจ้งลูกค้าแล้ว', reject: 'บันทึกสลิปไม่ผ่านแล้ว', noshow: 'บันทึกแล้ว', shopcancel: 'ยกเลิกแล้ว · แจ้งลูกค้าแล้ว',
+      checkin: 'เช็กอินแล้ว' + (out.earned != null ? ' · +' + out.earned + ' แต้ม' : '') }[op];
+    toast(msg, 'ok');
+    bg.remove();
+    loadStaffBookings();
+  } catch (e) {
+    bg.querySelectorAll('button').forEach((x) => (x.disabled = false));
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+  }
 }
 
 async function scanQr() {
@@ -1226,6 +2310,7 @@ async function scanQr() {
 }
 
 async function lookup(q) {
+  if (/^W\d{6}-?\d{3}$/i.test(String(q).trim())) return openStaffBooking(String(q).trim()); // QR การจอง Wellness
   const box = $('#s-member');
   box.innerHTML = spinner();
   try {
@@ -1387,6 +2472,8 @@ async function redeem(rewardId) {
 
 // ปุ่มในหน้า: data-go = เปลี่ยนหน้า, data-link = เปิดลิงก์ภายนอก
 document.addEventListener('click', (ev) => {
+  const pr = ev.target.closest('[data-promo]');
+  if (pr) { ev.preventDefault(); openPromo(Number(pr.dataset.promo)); return; }
   const g = ev.target.closest('[data-go]');
   if (g) { ev.preventDefault(); go(g.dataset.go, true); return; }
   const l = ev.target.closest('[data-link]');
@@ -1399,6 +2486,14 @@ renderLoading();
 loadPublic();               // เริ่มโหลดข้อมูลร้านก่อน (ทำพร้อมกับการเชื่อม LINE)
 liffPromise = initLiff();
 go(initialPage(), false);
+
+// หน้าแรก: เชื่อม LINE เสร็จแล้ว → อัปเดตแต้มบนการ์ดสมาชิกเงียบๆ (ไม่บังคับล็อกอิน)
+liffPromise.then(async (ok) => {
+  if (!ok || !liff.isLoggedIn() || !liff.getIDToken() || state.page === 'reward' || state.page === 'staff') return;
+  const c = cachedMe();
+  if (c && !sameUser(c)) store('set', ME_KEY, null);
+  try { saveMe(await api('me')); } catch (e) { debug('อัปเดตการ์ดสมาชิกไม่สำเร็จ: ' + e.message); }
+});
 </script>
 </body>
 </html>
