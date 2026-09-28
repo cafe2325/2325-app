@@ -1389,21 +1389,27 @@ async function api(action, data) {
     }
     throw new Error('NO_TOKEN');
   }
+  const payload = JSON.stringify(Object.assign({ action: action, idToken: idToken }, data || {}));
   let out;
-  try {
-    const res = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // กัน CORS preflight
-      body: JSON.stringify(Object.assign({ action: action, idToken: idToken }, data || {})),
-    });
-    out = await res.json();
-  } catch (e) {
-    throw new Error('NETWORK');
-  }
-  debug('API ' + action + ' → ' + JSON.stringify(out).slice(0, 160));
-  if (out.ok && out.message && !out.profile && !out.member && !out.recent) {
-    // ได้คำตอบของ doGet แทน doPost (คำขอถูกเปลี่ยนเป็น GET ระหว่างทาง)
-    throw new Error('GOT_GET_RESPONSE');
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // กัน CORS preflight
+        body: payload,
+        cache: 'no-store',
+        redirect: 'follow',
+      });
+      out = await res.json();
+    } catch (e) {
+      throw new Error('NETWORK');
+    }
+    debug('API ' + action + ' (' + attempt + ') → ' + JSON.stringify(out).slice(0, 160));
+    // ได้คำตอบของ doGet แทน doPost = คำขอถูกเปลี่ยนเป็น GET ระหว่างทาง (หลังบ้านยังไม่ได้ทำงาน) → ส่งใหม่ได้ปลอดภัย
+    const gotGet = out.ok && out.message && !out.via && !out.profile && !out.member && !out.recent;
+    if (!gotGet) break;
+    if (attempt >= 3) throw new Error('GOT_GET_RESPONSE');
+    await new Promise((r) => setTimeout(r, 600 * attempt));
   }
   if (!out.ok) {
     // token หมดอายุ → ล็อกอินใหม่ 1 ครั้ง
