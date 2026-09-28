@@ -524,6 +524,21 @@
     .price-list div { flex: 1; text-align: center; background: var(--sea-soft); border-radius: 12px; padding: 10px 4px; }
     .price-list b { display: block; font: 700 17px var(--font-en); color: var(--sea); }
     .price-list span { font-size: 12px; color: var(--ink-2); }
+    .nbk {
+      margin-top: 12px; width: 100%; display: flex; gap: 12px; align-items: center; text-align: left; cursor: pointer;
+      font: inherit; color: var(--ink); background: var(--sea-soft); border: 1px solid #CFDFE4; border-radius: 18px; padding: 12px 14px;
+    }
+    .nbk .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--sea); color: #fff; display: grid; place-items: center; flex: none; }
+    .nbk .ic svg { width: 22px; height: 22px; }
+    .nbk .tx { flex: 1; min-width: 0; }
+    .nbk .tx small { display: block; font-size: 12px; color: var(--sea); font-weight: 600; }
+    .nbk .tx b { display: block; font-size: 15.5px; font-weight: 600; line-height: 1.35; }
+    .nbk .tx span { font-size: 12.5px; color: var(--ink-2); }
+    .nbk .go { color: var(--sea); flex: none; }
+    .nbk .go svg { width: 20px; height: 20px; }
+    .nbk.hold { background: var(--warn-soft); border-color: #EBCDBE; }
+    .nbk.hold .ic { background: var(--warn); }
+    .nbk.hold .tx small { color: var(--warn); }
     .sheet.left { text-align: left; max-height: 92vh; overflow-y: auto; }
     .slip-img { width: 100%; border-radius: 12px; border: 1px solid var(--line); margin-top: 8px; }
     .btn-row { display: flex; gap: 10px; margin-top: 10px; }
@@ -929,6 +944,10 @@ function go(page, fromUser) {
   if (page === 'reward') openReward();
   if (page === 'staff') openStaff();
   if (page === 'book') openBook();
+  if (page === 'home' && state.homeStale && state.liffReady && liff.isLoggedIn()) {
+    state.homeStale = false;
+    api('me').then(saveMe).catch((e) => debug('อัปเดตหน้าแรกไม่สำเร็จ: ' + e.message));
+  }
 }
 
 function buildTabbar() {
@@ -963,8 +982,8 @@ function renderHome() {
 
   if (s.announcement) h += '<div class="notice" style="margin-top:14px">' + ICON.info + '<div>' + esc(s.announcement) + '</div></div>';
 
-  // 2) การ์ดสมาชิก
-  h += '<div id="home-member"></div>';
+  // 2) การ์ดสมาชิก + นัด Wellness ของฉัน (ขึ้นเฉพาะตอนมีนัด)
+  h += '<div id="home-member"></div><div id="home-booking"></div>';
 
   // 3) โปรโมชั่น
   const promos = d.promos || [];
@@ -1007,6 +1026,7 @@ function renderHome() {
 
   $('#view-home').innerHTML = h;
   renderHomeMember();
+  renderHomeBooking();
   watchDots('promo-row', 'promo-dots');
 }
 
@@ -1039,6 +1059,32 @@ function renderHomeMember() {
       '<span><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></span><span class="go">' + ICON.arrow + '</span></button>';
   }
 }
+
+/** การ์ดนัด Wellness บนหน้าแรก · ไม่มีนัด = ไม่แสดง */
+function renderHomeBooking() {
+  const box = $('#home-booking');
+  if (!box) return;
+  const me = state.me || (CONFIG.LIFF_ID ? cachedMe() : null);
+  const bk = me && me.booking;
+  const endAt = bk ? new Date(bk.date + 'T' + (bk.end || bk.time) + ':00+07:00').getTime() : 0;
+  if (!bk || endAt < Date.now() || (bk.status === BST.HOLD && num(bk.holdUntil) + 5 * 60000 < Date.now())) {
+    box.innerHTML = '';
+    return;
+  }
+  const hold = bk.status === BST.HOLD;
+  const left = hold ? Math.max(0, Math.ceil((num(bk.holdUntil) - Date.now()) / 60000)) : 0;
+  const when = (bk.date === isoToday() ? 'วันนี้' : thDate(bk.date)) + ' · ' + bk.time + ' น.';
+  box.innerHTML = '<button class="nbk' + (hold ? ' hold' : '') + '" data-open-bk="' + esc(bk.id) + '">' +
+    '<span class="ic">' + (hold ? ICON.clock : ICON.snow) + '</span>' +
+    '<span class="tx"><small>' + (hold ? 'รอชำระมัดจำ · เหลือ ' + left + ' นาที' : 'นัด Wellness ของคุณ') + '</small>' +
+    '<b>' + when + ' · ' + bk.people + ' ท่าน</b>' +
+    '<span>' + (hold ? 'แตะเพื่อชำระมัดจำ ' + baht(bk.payDue) + '.-' : esc(bk.status) + ' · แตะเพื่อดู QR ใบจอง') +
+    (bk.more ? ' · +' + bk.more + ' นัด' : '') + '</span></span>' +
+    '<span class="go">' + ICON.arrow + '</span></button>';
+}
+
+/** หลังจอง/จ่าย/ยกเลิก → ให้หน้าแรกดึงข้อมูลนัดใหม่ครั้งถัดไปที่เปิด */
+function markHomeStale() { state.homeStale = true; }
 
 /** เปิด QR เต็มจอแบบแผ่นเลื่อนขึ้นจากด้านล่าง */
 function showQrSheet(m) {
@@ -1117,6 +1163,7 @@ function openStatus(shop) {
 
 // อัปเดตป้ายเปิด/ปิดทุกนาที
 setInterval(() => {
+  if (state.page === 'home') renderHomeBooking();
   const el = $('#open-status');
   if (!el || !state.data) return;
   const st = openStatus(state.data.shop);
@@ -1388,6 +1435,7 @@ function saveMe(me) {
   state.me = me;
   store('set', ME_KEY, me);
   renderHomeMember();
+  renderHomeBooking();
 }
 
 function cachedMe() {
@@ -1666,8 +1714,12 @@ async function openBook() {
     w.mine = await api('wbMine');
     if (state.page !== 'book') return;
     const hold = w.mine.bookings.find((b) => b.status === BST.HOLD);
-    const intent = w.intent;
+    const intent = w.intent || '';
     w.intent = '';
+    if (intent.indexOf('open:') === 0) {                     // แตะการ์ดนัดบนหน้าแรก
+      const bk = w.mine.bookings.concat(w.mine.past).find((b) => b.id === intent.slice(5));
+      if (bk) return bk.status === BST.HOLD ? renderPay(bk) : renderTicket(bk);
+    }
     if (hold) return renderPay(hold);                       // ค้างจ่ายมัดจำ → ไปหน้าจ่ายก่อน
     if (intent === 'new') return startPick();                // กด "จองคิว"
     if (intent === 'mine' || w.mine.bookings.length) return renderBookList(); // กด "การจองของฉัน"
@@ -1854,7 +1906,7 @@ function renderConfirm() {
     btn.disabled = true; btn.textContent = 'กำลังจอง…';
     try {
       const out = await api('wbCreate', { date: w.date, time: w.time, people: w.people, name: name, phone: phone, agree: true });
-      w.mine = null;
+      w.mine = null; markHomeStale();
       if (out.booking.status === BST.HOLD) renderPay(out.booking);
       else { renderTicket(out.booking); toast('จองเรียบร้อย ✅', 'ok'); }
     } catch (e) {
@@ -1920,7 +1972,7 @@ function renderPay(bk) {
         '<div class="card center"><p class="card-title">หมดเวลาชำระมัดจำ</p><p class="muted small">รอบนี้ถูกปล่อยให้คนอื่นจองแล้ว<br>ถ้าโอนเงินไปแล้ว กรุณาติดต่อร้านทางแชท LINE</p></div>' +
         '<button class="btn sea" id="bk-again">จองใหม่</button>';
       onBack(showMine);
-      $('#bk-again').onclick = () => { w.mine = null; openBook(); };
+      $('#bk-again').onclick = () => { w.mine = null; markHomeStale(); openBook(); };
     }
   };
   tick();
@@ -1943,7 +1995,7 @@ function renderPay(bk) {
     btn.disabled = true; btn.textContent = 'กำลังส่ง…';
     try {
       const out = await api('wbSlip', { bookingId: bk.id, image: w.slip });
-      w.mine = null;
+      w.mine = null; markHomeStale();
       renderTicket(out.booking);
       toast('ส่งสลิปแล้ว รอร้านยืนยันทาง LINE', 'ok');
     } catch (e) {
@@ -2061,7 +2113,7 @@ async function cancelBooking(bk) {
   try {
     const out = await api('wbCancel', { bookingId: bk.id });
     toast(out.credit ? 'ยกเลิกแล้ว · ได้เครดิต ' + baht(out.credit) + ' บาท' : 'ยกเลิกแล้ว', 'ok');
-    state.wb.mine = null;
+    state.wb.mine = null; markHomeStale();
     await showMine();
   } catch (e) {
     if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
@@ -2074,7 +2126,7 @@ async function doReschedule() {
   btn.disabled = true; btn.textContent = 'กำลังเลื่อน…';
   try {
     const out = await api('wbReschedule', { bookingId: w.resched.id, date: w.date, time: w.time });
-    w.mine = null;
+    w.mine = null; markHomeStale();
     renderTicket(out.booking);
     toast('เลื่อนนัดเรียบร้อย ✅', 'ok');
   } catch (e) {
@@ -2476,6 +2528,8 @@ async function redeem(rewardId) {
 
 // ปุ่มในหน้า: data-go = เปลี่ยนหน้า, data-link = เปิดลิงก์ภายนอก
 document.addEventListener('click', (ev) => {
+  const ob = ev.target.closest('[data-open-bk]');
+  if (ob) { ev.preventDefault(); state.wb.intent = 'open:' + ob.dataset.openBk; go('book', true); return; }
   const bk = ev.target.closest('[data-book]');
   if (bk) { ev.preventDefault(); state.wb.intent = bk.dataset.book; go('book', true); return; }
   const pr = ev.target.closest('[data-promo]');
