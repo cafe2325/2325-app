@@ -354,6 +354,10 @@
         linear-gradient(150deg, #3A3733 0%, #2B2A28 60%, #1F1E1C 100%);
       box-shadow: 0 10px 28px rgba(43, 42, 40, .22);
     }
+    .mcard, .mini { position: relative; overflow: hidden; }
+    .cardbg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .cardshade { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(20,18,16,.35), rgba(20,18,16,.78)); }
+    .mcard > :not(.cardbg):not(.cardshade), .mini > :not(.cardbg):not(.cardshade) { position: relative; z-index: 1; }
     .mcard .top { display: flex; justify-content: space-between; align-items: center; }
     .mcard .brand { font-family: var(--font-en); font-weight: 700; letter-spacing: .12em; font-size: 13px; opacity: .85; }
     .mcard .tier { font-size: 11px; letter-spacing: .1em; color: var(--wood); }
@@ -436,11 +440,11 @@
     .back { display: inline-flex; align-items: center; gap: 4px; font: 500 14px var(--font); color: var(--muted); background: none; border: 0; padding: 6px 0; cursor: pointer; }
     .back svg { width: 18px; height: 18px; transform: rotate(180deg); }
     .tiers { display: flex; gap: 8px; }
-    .tier { flex: 1; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 4px; text-align: center; background: #fff; min-width: 0; }
-    .tier b { display: block; font-size: 14px; font-weight: 600; }
-    .tier span { font-size: 12px; color: var(--muted); }
-    .tier.on { border-color: var(--sea); background: var(--sea-soft); }
-    .tier.on span { color: var(--sea); font-weight: 600; }
+    .tiers .tier { flex: 1; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 4px; text-align: center; background: #fff; min-width: 0; }
+    .tiers .tier b { display: block; font-size: 14px; font-weight: 600; }
+    .tiers .tier span { font-size: 12px; color: var(--muted); }
+    .tiers .tier.on { border-color: var(--sea); background: var(--sea-soft); }
+    .tiers .tier.on span { color: var(--sea); font-weight: 600; }
     .stepper { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
     .stepper button { width: 52px; height: 52px; border-radius: 14px; border: 0; background: var(--gold-soft); font: 600 26px var(--font-en); color: var(--ink); cursor: pointer; }
     .stepper button:disabled { opacity: .35; }
@@ -1056,7 +1060,7 @@ function renderHomeMember() {
     const onSeg = Math.round((on / target) * shown);
     let note = 'แสดง QR ให้พนักงานเมื่อชำระเงิน';
     if (r) note = m.points >= r.points ? '🎉 แลก ' + r.name + ' ได้แล้ว!' : 'อีก ' + (r.points - m.points) + ' แต้ม รับ' + r.name;
-    box.innerHTML = '<div class="mini">' +
+    box.innerHTML = '<div class="mini">' + cardBg() +
       '<div class="l" data-go="reward"><div class="hi">สวัสดีคุณ ' + esc(m.displayName) + '</div>' +
       '<div class="pts"><b>' + m.points + '</b><span>/ ' + target + ' แต้ม</span></div>' +
       '<div class="seg">' + Array.from({ length: shown }, (_, i) => '<i' + (i < onSeg ? ' class="on"' : '') + '></i>').join('') + '</div>' +
@@ -1564,7 +1568,7 @@ function renderCard(m) {
 
   // บัตร
   const partialPct = Math.round(num(m.partial) * 100);
-  h += '<div class="mcard">' +
+  h += '<div class="mcard">' + cardBg() +
     '<div class="top"><span class="brand">' + esc(d.shop.shopName || '2325 CAFE') + '</span><span class="tier en">Member</span></div>' +
     '<div class="who">' +
     (m.pictureUrl ? '<img class="avatar" src="' + esc(m.pictureUrl) + '" alt="">' : '<div class="avatar"></div>') +
@@ -1609,6 +1613,12 @@ function renderCard(m) {
   drawQr(m.memberId);
   $('#btn-hist').onclick = loadHistory;
   $('#btn-refresh').onclick = () => refreshMe(true);
+}
+
+/** รูปพื้นบัตรสมาชิก (แท็บตั้งค่าร้าน) · ไม่มี = พื้นสีดำเดิม */
+function cardBg() {
+  const u = state.data && state.data.shop && state.data.shop.memberCardImage;
+  return u ? '<img class="cardbg" src="' + esc(sizedImg(u, 1000)) + '" alt="" onerror="imgFailBg(this)"><i class="cardshade"></i>' : '';
 }
 
 function fmtId(id) { return esc(String(id).replace(/^(\d{3})(\d{3})$/, '$1 $2')); }
