@@ -1164,12 +1164,13 @@ function wellnessCta(w) {
   const b = w.booking;
   const open = b && b.mode === 'เปิด' && b.tiers && b.tiers.length;
   if (open) {
-    return '<button class="btn sea" data-go="book">' + ICON.calendar + 'จองคิว</button>' +
-      '<p class="muted small center" style="margin-top:10px">จองแล้ว ดูการจองของฉันได้ที่ปุ่มเดียวกัน</p>';
+    return '<button class="btn sea" data-book="new">' + ICON.calendar + 'จองคิว</button>' +
+      '<button class="btn line" data-book="mine" style="margin-top:10px">' + ICON.qr + 'การจองของฉัน</button>';
   }
   return '<button class="btn" disabled>' + esc(w.status || 'เปิดจองเร็วๆ นี้') + '</button>' +
     '<p class="muted small center" style="margin-top:10px">ติดตามวันเปิดจองได้ทางแชท LINE ของร้าน</p>' +
-    (b && b.mode === 'เฉพาะพนักงาน' ? '<button class="btn ghost" data-go="book">ทดสอบระบบจอง (เฉพาะพนักงาน)</button>' : '');
+    (b && b.mode === 'เฉพาะพนักงาน' ? '<button class="btn ghost" data-book="new">ทดสอบระบบจอง (เฉพาะพนักงาน)</button>' : '') +
+    (b && b.mode !== 'เปิด' ? '<button class="btn ghost" data-book="mine">การจองของฉัน</button>' : '');
 }
 
 function renderPromos() {
@@ -1665,8 +1666,11 @@ async function openBook() {
     w.mine = await api('wbMine');
     if (state.page !== 'book') return;
     const hold = w.mine.bookings.find((b) => b.status === BST.HOLD);
-    if (hold) return renderPay(hold);
-    if (w.mine.bookings.length) return renderBookList();
+    const intent = w.intent;
+    w.intent = '';
+    if (hold) return renderPay(hold);                       // ค้างจ่ายมัดจำ → ไปหน้าจ่ายก่อน
+    if (intent === 'new') return startPick();                // กด "จองคิว"
+    if (intent === 'mine' || w.mine.bookings.length) return renderBookList(); // กด "การจองของฉัน"
     startPick();
   } catch (e) {
     pageError(el, e, openBook);
@@ -2472,6 +2476,8 @@ async function redeem(rewardId) {
 
 // ปุ่มในหน้า: data-go = เปลี่ยนหน้า, data-link = เปิดลิงก์ภายนอก
 document.addEventListener('click', (ev) => {
+  const bk = ev.target.closest('[data-book]');
+  if (bk) { ev.preventDefault(); state.wb.intent = bk.dataset.book; go('book', true); return; }
   const pr = ev.target.closest('[data-promo]');
   if (pr) { ev.preventDefault(); openPromo(Number(pr.dataset.promo)); return; }
   const g = ev.target.closest('[data-go]');
