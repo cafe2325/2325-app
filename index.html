@@ -786,6 +786,18 @@ function imgFail(img) {
   }
 }
 
+/** รูปพื้นหลัง (ภาพปก โลโก้ แบนเนอร์) โหลดไม่ขึ้น → ลองลิงก์สำรอง 1 ครั้ง → ไม่ได้อีกซ่อนรูป */
+function imgFailBg(img) {
+  const m = img.src.match(/lh3\.googleusercontent\.com\/d\/([\w-]+)/);
+  if (m && !img.dataset.retry) {
+    img.dataset.retry = '1';
+    img.src = 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w1200';
+  } else {
+    debug('โหลดรูปไม่ได้: ' + img.src + ' (ตรวจว่าแชร์ไฟล์แบบ ทุกคนที่มีลิงก์)');
+    img.remove();
+  }
+}
+
 function imgTag(url, alt, w) {
   if (!url) return placeholder();
   return '<img src="' + esc(sizedImg(url, w || 400)) + '" alt="' + esc(alt) + '" loading="lazy" decoding="async" onerror="imgFail(this)">';
@@ -971,9 +983,9 @@ function renderHome() {
   // 1) ภาพปก + ป้ายเปิด/ปิด
   const st = openStatus(s);
   h += '<div class="hero">' +
-    (s.coverImage ? '<img class="cover" src="' + esc(sizedImg(s.coverImage, 1200)) + '" alt="" fetchpriority="high" onerror="this.remove()">' : '') +
+    (s.coverImage ? '<img class="cover" src="' + esc(sizedImg(s.coverImage, 1200)) + '" alt="" fetchpriority="high" onerror="imgFailBg(this)">' : '') +
     '<div class="txt">' +
-    (s.logoImage ? '<img class="logo" src="' + esc(sizedImg(s.logoImage, 200)) + '" alt="" onerror="this.remove()">' : '') +
+    (s.logoImage ? '<img class="logo" src="' + esc(sizedImg(s.logoImage, 200)) + '" alt="" onerror="imgFailBg(this)">' : '') +
     (s.tagline ? '<div class="tag en">' + esc(s.tagline) + '</div>' : '') +
     '<h1>' + esc(s.heroTitle || s.shopName) + '</h1>' +
     (s.heroSubtitle ? '<div class="sub">' + esc(s.heroSubtitle) + '</div>' : '') +
@@ -1101,7 +1113,7 @@ function showQrSheet(m) {
 
 function promoCard(p, i) {
   return '<button class="promo' + (i % 2 ? ' alt' : '') + '" data-promo="' + i + '">' +
-    (p.image ? '<img src="' + esc(sizedImg(p.image, 800)) + '" alt="" loading="lazy" onerror="this.remove()">' : '') +
+    (p.image ? '<img src="' + esc(sizedImg(p.image, 800)) + '" alt="" loading="lazy" onerror="imgFailBg(this)">' : '') +
     (p.badge ? '<span class="badge2">' + esc(p.badge) + '</span>' : '') +
     '<div><b>' + esc(p.title) + '</b>' + (p.detail ? '<span class="d">' + esc(p.detail) + '</span>' : '') + '</div></button>';
 }
@@ -1130,7 +1142,7 @@ function watchDots(rowId, dotsId) {
 
 function wellnessCard(w) {
   return '<button class="well" data-go="wellness">' +
-    (w.image ? '<img src="' + esc(sizedImg(w.image, 900)) + '" alt="" loading="lazy" onerror="this.remove()">' : '') +
+    (w.image ? '<img src="' + esc(sizedImg(w.image, 900)) + '" alt="" loading="lazy" onerror="imgFailBg(this)">' : '') +
     '<span class="ics"><span>' + ICON.snow + '</span><span>' + ICON.flame + '</span></span>' +
     '<div><div class="k en">Wellness</div><b>' + esc(w.title) + '</b>' +
     (w.subtitle ? '<p>' + esc(w.subtitle) + '</p>' : '') +
