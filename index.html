@@ -699,7 +699,7 @@ const state = {
   me: null,            // ข้อมูลสมาชิกของฉัน
   staffMember: null,   // สมาชิกที่พนักงานกำลังดู
   staffService: null,
-  wb: { step: 'pick', people: 1, date: '', time: '', days: null, mine: null, booking: null, resched: null, slip: '' },
+  wb: { step: '', people: 1, date: '', time: '', days: null, mine: null, booking: null, resched: null, slip: '' },
 };
 let dataResolve;
 const dataReady = new Promise((r) => (dataResolve = r));
@@ -1096,7 +1096,7 @@ function renderHomeBooking() {
 }
 
 /** หลังจอง/จ่าย/ยกเลิก → ให้หน้าแรกดึงข้อมูลนัดใหม่ครั้งถัดไปที่เปิด */
-function markHomeStale() { state.homeStale = true; }
+function markHomeStale() { state.homeStale = true; state.wb.slotsAt = 0; }
 
 /** เปิด QR เต็มจอแบบแผ่นเลื่อนขึ้นจากด้านล่าง */
 function showQrSheet(m) {
@@ -1717,33 +1717,109 @@ async function openBook() {
   const el = $('#view-book');
   const w = state.wb;
   if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('จอง Wellness'); return; }
-  el.innerHTML = bkHead('Book · Wellness', 'จองคิว Wellness', 'Wellness') + spinner();
-  onBack(() => go('wellness', true));
+  const intent = w.intent || '';
+  w.intent = '';
   loadSlots();
+
+  // 1) แสดงทันทีจากข้อมูลที่จำไว้ในเครื่อง (ไม่ต้องรอหลังบ้าน)
+  let shown = false;
+  const cached = cachedMine();
+  if (cached && state.data) {
+    w.mine = cached;
+    shown = routeBook(intent);
+  } else if (intent === 'new' && bcfg() && bcfg().mode === 'เปิด') {
+    w.mine = null;
+    startPick();
+    shown = true;
+  }
+  if (!shown) {
+    w.step = 'loading';                                      // กันหน้าเลือกรอบวาดทับตอนรอข้อมูล
+    const isNew = intent === 'new';
+    el.innerHTML = bkHead(isNew ? 'Book · Wellness' : 'My Booking', isNew ? 'จองคิว Wellness' : 'การจองของฉัน', 'Wellness') + spinner();
+    onBack(() => go('wellness', true));
+  }
+
+  // 2) ดึงข้อมูลล่าสุดจากหลังบ้าน แล้วอัปเดตหน้าที่เปิดอยู่
   try {
     await requireLogin('book');
     await Promise.race([dataReady, new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT')), 35000))]);
-    w.mine = await api('wbMine');
-    if (state.page !== 'book') return;
-    const hold = w.mine.bookings.find((b) => b.status === BST.HOLD);
-    const intent = w.intent || '';
-    w.intent = '';
-    if (intent.indexOf('open:') === 0) {                     // แตะการ์ดนัดบนหน้าแรก
-      const bk = w.mine.bookings.concat(w.mine.past).find((b) => b.id === intent.slice(5));
-      if (bk) return bk.status === BST.HOLD ? renderPay(bk) : renderTicket(bk);
+    if (cached && !sameMineUser()) {          // คนละบัญชี LINE → ไม่ใช้ข้อมูลที่จำไว้
+      shown = false;
+      w.step = 'loading';
+      el.innerHTML = bkHead('My Booking', 'การจองของฉัน', 'Wellness') + spinner();
     }
-    if (hold) return renderPay(hold);                       // ค้างจ่ายมัดจำ → ไปหน้าจ่ายก่อน
-    if (intent === 'new') return startPick();                // กด "จองคิว"
-    if (intent === 'mine' || w.mine.bookings.length) return renderBookList(); // กด "การจองของฉัน"
-    startPick();
+    await reloadMine();
+    if (state.page !== 'book') return;
+    if (!shown) routeBook(intent);
+    else refreshBookView();
   } catch (e) {
-    pageError(el, e, openBook);
+    if (!shown) pageError(el, e, openBook);
+    else if (e.message !== 'REDIRECTING') debug('อัปเดตการจองไม่สำเร็จ: ' + e.message);
   }
 }
 
-/** รอบว่าง (ไม่ต้องล็อกอิน · โหลดพร้อมกับการเชื่อม LINE) */
-async function loadSlots() {
+/** เลือกหน้าที่จะเปิดตามปุ่มที่กดมา */
+function routeBook(intent) {
+  const m = state.wb.mine;
+  const all = m.bookings.concat(m.past);
+  if (intent.indexOf('open:') === 0) {                       // แตะการ์ดนัดบนหน้าแรก
+    const bk = all.find((b) => b.id === intent.slice(5));
+    if (bk) { if (bk.status === BST.HOLD) renderPay(bk); else renderTicket(bk); return true; }
+  }
+  const hold = m.bookings.find((b) => b.status === BST.HOLD);
+  if (hold) { renderPay(hold); return true; }                // ค้างจ่ายมัดจำ → ไปหน้าจ่ายก่อน
+  if (intent === 'new') { startPick(); return true; }        // กด "จองคิว"
+  if (intent === 'mine' || m.bookings.length || m.past.length) { renderBookList(); return true; } // กด "การจองของฉัน"
+  startPick();
+  return true;
+}
+
+/** ได้ข้อมูลล่าสุดแล้ว → อัปเดตหน้าที่ลูกค้ากำลังดูอยู่ (ไม่พาไปหน้าอื่นถ้าไม่จำเป็น) */
+function refreshBookView() {
   const w = state.wb;
+  const m = w.mine;
+  const find = (id) => m.bookings.concat(m.past).find((b) => b.id === id);
+  const hold = m.bookings.find((b) => b.status === BST.HOLD);
+  if (w.step === 'list') return renderBookList();
+  if (w.step === 'ticket' && w.booking) {
+    const bk = find(w.booking.id);
+    if (bk && (bk.status !== w.booking.status || bk.date !== w.booking.date || bk.time !== w.booking.time)) renderTicket(bk);
+    return;
+  }
+  if (w.step === 'pay' && w.booking) {
+    const bk = find(w.booking.id);
+    if (!bk || bk.status !== BST.HOLD) { if (bk) renderTicket(bk); else renderBookList(); }
+    return;
+  }
+  if (w.step === 'pick' && !w.resched) {
+    if (hold && !w.time) return renderPay(hold);
+    renderPick();                                            // อัปเดตเครดิต / สิทธิ์พนักงาน
+  }
+}
+
+// จำรายการจองไว้ในเครื่อง (แยกตามบัญชี LINE)
+const MINE_KEY = 'app2325:mine:' + CONFIG.LIFF_ID;
+function lineSub() {
+  try { const t = liff.getDecodedIDToken(); return (t && t.sub) || ''; } catch (e) { return ''; }
+}
+function cachedMine() {
+  const c = store('get', MINE_KEY);
+  return c && c.data && c.data.bookings ? c.data : null;
+}
+function sameMineUser() {
+  const c = store('get', MINE_KEY);
+  const sub = lineSub();
+  return !(c && c.sub && sub && c.sub !== sub);
+}
+
+/** รอบว่าง (ไม่ต้องล็อกอิน · โหลดพร้อมกับการเชื่อม LINE) */
+async function loadSlots(force) {
+  const w = state.wb;
+  if (!force && w.days && Date.now() - (w.slotsAt || 0) < 30000) {
+    if (state.page === 'book' && w.step === 'pick') renderPick();
+    return;
+  }
+  w.slotsAt = Date.now();
   try {
     const res = await fetch(CONFIG.API_URL + '?action=slots', { cache: 'no-store' });
     const d = await res.json();
@@ -1760,6 +1836,7 @@ async function loadSlots() {
 
 async function reloadMine() {
   state.wb.mine = await api('wbMine');
+  store('set', MINE_KEY, { sub: lineSub(), data: state.wb.mine });
   return state.wb.mine;
 }
 
@@ -1782,6 +1859,11 @@ function renderPick() {
   const el = $('#view-book');
   if (!b || !b.tiers || !b.tiers.length) {
     el.innerHTML = bkHead('Book · Wellness', 'จองคิว Wellness', 'Wellness') + '<div class="card center muted">ยังไม่เปิดระบบจอง</div>';
+    onBack(() => go('wellness', true));
+    return;
+  }
+  if (b.mode === 'เฉพาะพนักงาน' && !w.mine) {           // ยังไม่รู้ว่าเป็นพนักงานไหม → รอข้อมูล
+    el.innerHTML = bkHead('Book · Wellness', 'จองคิว Wellness', 'Wellness') + spinner();
     onBack(() => go('wellness', true));
     return;
   }
@@ -1872,7 +1954,7 @@ function renderPick() {
   });
   if ($('#pp-minus')) $('#pp-minus').onclick = () => { w.people = Math.max(1, w.people - 1); renderPick(); };
   if ($('#pp-plus')) $('#pp-plus').onclick = () => { w.people = Math.min(b.maxPeople, w.people + 1); renderPick(); };
-  if ($('#slots-retry')) $('#slots-retry').onclick = () => { w.days = null; renderPick(); loadSlots(); };
+  if ($('#slots-retry')) $('#slots-retry').onclick = () => { w.days = null; renderPick(); loadSlots(true); };
   el.querySelectorAll('[data-day]').forEach((x) => (x.onclick = () => { w.date = x.dataset.day; w.time = ''; renderPick(); }));
   el.querySelectorAll('[data-slot]').forEach((x) => (x.onclick = () => { w.time = x.dataset.slot; renderPick(); }));
   $('#bk-next').onclick = () => (w.resched ? doReschedule() : renderConfirm());
@@ -1924,7 +2006,7 @@ function renderConfirm() {
     } catch (e) {
       if (e.message === 'REDIRECTING') return;
       toast(errText(e), 'error');
-      if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; w.step = 'pick'; renderPick(); loadSlots(); return; }
+      if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; w.step = 'pick'; renderPick(); loadSlots(true); return; }
       btn.disabled = false; btn.textContent = c.payDue > 0 ? 'ไปชำระมัดจำ ' + baht(c.payDue) + '.-' : 'ยืนยันการจอง';
     }
   };
@@ -2144,7 +2226,7 @@ async function doReschedule() {
   } catch (e) {
     if (e.message === 'REDIRECTING') return;
     toast(errText(e), 'error');
-    if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; loadSlots(); }
+    if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; loadSlots(true); }
     btn.disabled = false; btn.textContent = 'ยืนยันเลื่อน';
   }
 }
