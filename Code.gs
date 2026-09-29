@@ -207,6 +207,7 @@ const SETTINGS = [
   { key: 'heroSubtitle', label: 'บรรทัดรองภาพปก', value: 'อาหารเช้า · กาแฟ · Wellness', help: 'ข้อความใต้หัวข้อ · เว้นว่าง = ไม่แสดง' },
   { key: 'announcement', label: 'ประกาศหน้าแรก', value: 'เตรียมพบกับ 2325 CAFE เร็วๆ นี้', help: 'แถบประกาศบนหน้าแรก · เว้นว่าง = ไม่แสดง' },
   { key: 'coverImage', label: 'รูปหน้าปก (ลิงก์)', value: '', help: 'ลิงก์รูปจาก Google Drive (แชร์แบบทุกคนที่มีลิงก์)' },
+  { key: 'memberCardImage', label: 'รูปพื้นบัตรสมาชิก (ลิงก์)', value: '', help: 'พื้นหลังบัตรสะสมแต้ม · แนวนอน 1200×750 โทนเข้ม ไม่มีตัวหนังสือ · เว้นว่าง = พื้นสีดำ' },
   { key: 'logoImage', label: 'โลโก้ (ลิงก์)', value: '', help: 'ลิงก์รูปโลโก้จาก Google Drive' },
   { key: 'openHours', label: 'เวลาเปิด-ปิด', value: 'ทุกวัน 07:00 – 17:00', help: 'พิมพ์ได้หลายบรรทัด (Ctrl+Enter / ⌘+Enter ขึ้นบรรทัดใหม่)' },
   { key: 'closedNote', label: 'วันหยุด', value: '', help: 'เช่น ปิดทุกวันพุธ · เว้นว่าง = ไม่แสดง' },
@@ -286,7 +287,7 @@ const WELLNESS = [
   { key: 'leadMin', label: 'ต้องจองก่อนถึงรอบ (นาที)', value: 60, help: 'กันลูกค้าจองรอบที่ใกล้จะเริ่ม' },
   { key: 'holdMin', label: 'เวลาชำระมัดจำ (นาที)', value: 15, help: 'ไม่ส่งสลิปภายในเวลานี้ รอบจะถูกปล่อยให้คนอื่นจอง' },
   { key: 'cancelHours', label: 'ยกเลิก/เลื่อนได้ก่อน (ชั่วโมง)', value: 24, help: 'ยกเลิกทันเวลา = มัดจำเป็นเครดิต · เลื่อนนัดฟรี 1 ครั้ง' },
-  { key: 'creditDays', label: 'เครดิตมัดจำใช้ได้ (วัน)', value: 60, help: 'เครดิตหักจากการจองครั้งถัดไปให้อัตโนมัติ' },
+  { key: 'creditDays', label: 'เครดิตมัดจำใช้ได้ (วัน)', value: 60, help: 'ใช้ได้ทั้งจอง Wellness (หักให้เอง) และที่คาเฟ่ (พนักงานกดใช้ในโหมดพนักงาน)' },
   { key: 'promptpay', label: 'พร้อมเพย์ (เบอร์ หรือ เลขบัตร)', value: '', help: 'ใส่แล้ว ระบบสร้าง QR ที่มียอดเงินให้เอง (แนะนำ) · เว้นว่าง = ใช้รูป QR ด้านล่าง', text: true },
   { key: 'payName', label: 'ชื่อบัญชีรับเงิน', value: '', help: 'แสดงใต้ QR ให้ลูกค้าตรวจชื่อก่อนโอน' },
   { key: 'qrImage', label: 'รูป QR รับเงิน (ลิงก์)', value: '', help: 'ใช้เมื่อไม่ได้ใส่พร้อมเพย์ · ลิงก์รูปจาก Google Drive (แชร์แบบทุกคนที่มีลิงก์)' },
@@ -639,7 +640,7 @@ function doPost(e) {
     const handler = ACTIONS[body.action];
     if (!handler) throw new Error('UNKNOWN_ACTION');
     const user = verifyIdToken_(body.idToken);
-    return json_(Object.assign({ ok: true }, handler(user, body)));
+    return json_(Object.assign({ ok: true, via: 'post' }, handler(user, body)));
   } catch (err) {
     return json_(errorBody_(err));
   }
@@ -662,6 +663,7 @@ const ACTIONS = {
       member: found ? publicMember_(found) : null,
       isStaff: !!staff,
       staffName: staff ? staff.name : null,
+      booking: nextBooking_(user.userId),
     };
   },
 
@@ -752,6 +754,33 @@ const ACTIONS = {
     return { member: publicMember_(m, true), recent: recentTx_(m.memberId, 5) };
   },
 
+  /** พนักงาน: ใช้เครดิตเงินสด (จากมัดจำ Wellness ที่ยกเลิกทันเวลา) จ่ายค่าอาหาร/เครื่องดื่ม */
+  useCredit(user, body) {
+    const staff = requireStaff_(user);
+    const amount = Math.round(num_(body.amount) * 100) / 100;
+    if (!(amount > 0) || amount > CONFIG.MAX_BILL_AMOUNT) throw new Error('INVALID_AMOUNT');
+    const receiptNo = String(body.receiptNo || '').trim().slice(0, 40);
+    const m = withLock_(() => {
+      const m = findMember_('memberId', body.memberId);
+      if (!m) throw new Error('MEMBER_NOT_FOUND');
+      const rows = creditRows_(String(m.userId).trim());
+      const have = rows.reduce((t, c) => t + num_(c.creditLeft), 0);
+      if (amount > have + 1e-9) throw new Error('NOT_ENOUGH_CREDIT');
+      let need = amount;
+      rows.forEach((c) => {                       // หมดอายุก่อน ใช้ก่อน
+        if (need <= 0) return;
+        const u = Math.min(num_(c.creditLeft), need);
+        c.creditLeft = Math.round((num_(c.creditLeft) - u) * 100) / 100;
+        c.note = addNote_(c.note, 'ใช้เครดิต ' + u + ' ที่คาเฟ่' + (receiptNo ? ' (ใบเสร็จ ' + receiptNo + ')' : '') + ' · ' + staff.name);
+        updateRecord_(TAB.BOOKINGS, c);
+        need = Math.round((need - u) * 100) / 100;
+      });
+      addTx_(m, { type: 'ใช้เครดิต', service: 'cafe', amount: amount, receiptNo: receiptNo, points: 0, staff: staff });
+      return m;
+    });
+    return { member: publicMember_(m, true), recent: recentTx_(m.memberId, 5) };
+  },
+
   /** ลูกค้า: ประวัติแต้มของตัวเอง */
   myHistory(user) {
     const m = findMember_('userId', user.userId);
@@ -802,7 +831,7 @@ const ACTIONS = {
 
     const b = withLock_(() => {
       sweep_();
-      checkSlotFree_(cfg, date, time);
+      checkSlotFree_(cfg, date, time, user.userId); // จองซ้ำรอบเดิมของตัวเองได้ (เช่น กดจองใหม่หลังเน็ตหลุด)
 
       // ยกเลิกรายการที่ยังไม่จ่ายของลูกค้าคนนี้ (จองใหม่แทน)
       myBookings_(user.userId).filter((x) => x.status === BS.HOLD)
@@ -1091,6 +1120,7 @@ function getPublicData_() {
   const shop = getSettings_();
   shop.coverImage = imageUrl_(shop.coverImage);
   shop.logoImage = imageUrl_(shop.logoImage);
+  shop.memberCardImage = imageUrl_(shop.memberCardImage);
 
   // เมนู: จัดกลุ่มตามหมวด เรียงตามลำดับที่ปรากฏในชีต
   const groups = [];
@@ -1290,6 +1320,7 @@ function publicMember_(m, forStaff) {
     redeemCount: num_(m.redeemCount),
     visits: num_(m.visits),
     totalSpend: forStaff ? num_(m.totalSpend) : undefined,
+    credit: creditInfo_(m.userId),
     createdAt: m.createdAt || '',
     lastVisit: m.lastVisit || '',
   };
@@ -1521,12 +1552,13 @@ function shopCalendar_() {
 }
 
 /** รอบว่างทั้งหมด [{ date, slots: [{ t, s: free | full | past }] }] */
-function availability_(cfg) {
+function availability_(cfg, ignoreHoldOf) {
   const cal = shopCalendar_();
   const now = Date.now();
   const today = todayIso_();
   const taken = {};
   readTable_(TAB.BOOKINGS).rows.map(normBooking_).forEach((b) => {
+    if (ignoreHoldOf && b.status === BS.HOLD && b.userId === ignoreHoldOf) return; // รายการค้างจ่ายของคนที่กำลังจองใหม่
     if (isOccupying_(b, now)) taken[b.date + ' ' + b.time] = true;
   });
   const days = [];
@@ -1543,8 +1575,8 @@ function availability_(cfg) {
   return days;
 }
 
-function checkSlotFree_(cfg, date, time) {
-  const day = availability_(cfg).find((d) => d.date === date);
+function checkSlotFree_(cfg, date, time, ignoreHoldOf) {
+  const day = availability_(cfg, ignoreHoldOf).find((d) => d.date === date);
   const slot = day && day.slots.find((x) => x.t === time);
   if (!slot || slot.s === 'past') throw new Error('INVALID_SLOT');
   if (slot.s === 'full') throw new Error('SLOT_TAKEN');
@@ -1623,6 +1655,17 @@ function checkCanSlip_(b) {
   if (holdEnd_(b) <= Date.now()) throw new Error('HOLD_EXPIRED');
 }
 
+/** เครดิตรวมของลูกค้า (แสดงบนบัตรสมาชิก) · ไม่มี = null */
+function creditInfo_(userId) {
+  try {
+    const rows = creditRows_(String(userId || '').trim());
+    const amount = Math.round(rows.reduce((t, c) => t + num_(c.creditLeft), 0) * 100) / 100;
+    return amount > 0 ? { amount: amount, expiry: rows[0].creditExpiry || '' } : null;
+  } catch (e) {
+    return null; // ยังไม่มีแท็บการจอง
+  }
+}
+
 /** เครดิตมัดจำที่ยังใช้ได้ (หมดอายุก่อน ใช้ก่อน) */
 function creditRows_(userId) {
   const today = todayIso_();
@@ -1641,6 +1684,24 @@ function newBookingId_() {
 
 function bookingStart_(b) { return slotEpoch_(b.date, b.time); }
 function bookingEnd_(b, cfg) { return bookingStart_(b) + cfg.sessionMin * 60000; }
+
+/** นัด Wellness ที่ใกล้ที่สุดของลูกค้า (แสดงบนหน้าแรก) · ไม่มี = null */
+function nextBooking_(userId) {
+  try {
+    const cfg = bookingCfg_();
+    const now = Date.now();
+    const list = myBookings_(userId)
+      .filter((b) => isOccupying_(b, now) && b.status !== BS.IN && bookingEnd_(b, cfg) > now)
+      .sort((a, b) => (a.date + a.time < b.date + b.time ? -1 : 1));
+    if (!list.length) return null;
+    const hold = list.find((b) => b.status === BS.HOLD); // ค้างจ่ายมัดจำ → เตือนก่อน
+    const p = publicBooking_(hold || list[0], cfg);
+    p.more = list.length - 1;
+    return p;
+  } catch (e) {
+    return null; // ยังไม่ได้เปิดระบบจอง
+  }
+}
 
 /** ข้อมูลการจองที่ส่งให้ลูกค้า */
 function publicBooking_(b, cfg) {

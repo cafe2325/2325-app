@@ -371,6 +371,9 @@
     .bar { height: 8px; border-radius: 999px; background: rgba(246, 241, 231, .16); overflow: hidden; margin-top: 12px; }
     .bar i { display: block; height: 100%; background: var(--wood); border-radius: 999px; transition: width .5s; }
     .mcard .next { font-size: 13px; opacity: .8; margin-top: 6px; }
+    .crd { display: inline-flex; gap: 6px; align-items: center; margin-top: 12px; font-size: 12.5px; font-weight: 600;
+      background: rgba(217, 195, 160, .18); border: 1px solid rgba(217, 195, 160, .4); color: #F1E3C8; padding: 5px 12px; border-radius: 999px; }
+    .mini .crd { margin-top: 8px; font-size: 11.5px; padding: 3px 10px; }
 
     .reward { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
     .card-title + .reward { border-top: 0; padding-top: 0; }
@@ -440,7 +443,12 @@
     .back { display: inline-flex; align-items: center; gap: 4px; font: 500 14px var(--font); color: var(--muted); background: none; border: 0; padding: 6px 0; cursor: pointer; }
     .back svg { width: 18px; height: 18px; transform: rotate(180deg); }
     .tiers { display: flex; gap: 8px; }
-    .tiers .tier { flex: 1; border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 4px; text-align: center; background: #fff; min-width: 0; }
+    .tiers .tier { flex: 1; border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 4px; text-align: center; background: #fff; min-width: 0; font: inherit; color: var(--ink); cursor: pointer; }
+    .pnum { display: flex; gap: 8px; }
+    .pnum button { flex: 1; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; padding: 8px 0; font: 700 18px var(--font-en); color: var(--ink); cursor: pointer; }
+    .pnum button small { display: block; font: 400 11px var(--font); color: var(--muted); }
+    .pnum button.on { background: var(--sea); border-color: var(--sea); color: #fff; }
+    .pnum button.on small { color: #d6e7ec; }
     .tiers .tier b { display: block; font-size: 14px; font-weight: 600; }
     .tiers .tier span { font-size: 12px; color: var(--muted); }
     .tiers .tier.on { border-color: var(--sea); background: var(--sea-soft); }
@@ -669,6 +677,7 @@ const ERROR_TEXT = {
   RECEIPT_USED: 'ใบเสร็จนี้ให้แต้มไปแล้ว',
   INVALID_REWARD: 'รางวัลนี้ปิดใช้แล้ว',
   NOT_ENOUGH_POINTS: 'แต้มไม่พอ',
+  NOT_ENOUGH_CREDIT: 'เครดิตไม่พอ',
   BUSY: 'ระบบกำลังทำงาน ลองใหม่อีกครั้ง',
   SHEET_NOT_READY: 'หลังบ้านยังไม่พร้อม (ยังไม่ได้สร้างชีต)',
   MISSING_COLUMN: 'หัวคอลัมน์ใน Sheet ถูกเปลี่ยนชื่อ',
@@ -1064,7 +1073,8 @@ function renderHomeMember() {
       '<div class="l" data-go="reward"><div class="hi">สวัสดีคุณ ' + esc(m.displayName) + '</div>' +
       '<div class="pts"><b>' + m.points + '</b><span>/ ' + target + ' แต้ม</span></div>' +
       '<div class="seg">' + Array.from({ length: shown }, (_, i) => '<i' + (i < onSeg ? ' class="on"' : '') + '></i>').join('') + '</div>' +
-      '<div class="note">' + esc(note) + '</div></div>' +
+      '<div class="note">' + esc(note) + '</div>' +
+      (m.credit ? '<span class="crd">💳 เครดิต ' + baht(m.credit.amount) + '.-</span>' : '') + '</div>' +
       '<button class="qrbtn" id="btn-myqr">' + ICON.qr + 'QR ของฉัน</button></div>';
     $('#btn-myqr').onclick = () => showQrSheet(m);
   } else {
@@ -1578,7 +1588,10 @@ function renderCard(m) {
       ? '<div class="bar"><i style="width:' + partialPct + '%"></i></div>' +
         '<div class="next">อีก ' + baht(m.nextPointBaht) + ' บาท รับแต้มถัดไป</div>'
       : '') +
+    (m.credit ? '<div class="crd">💳 เครดิต ' + baht(m.credit.amount) + '.-' +
+      (m.credit.expiry ? ' · ใช้ได้ถึง ' + thDate(m.credit.expiry, true) : '') + '</div>' : '') +
     '</div>';
+  if (m.credit) h += '<p class="muted small center" style="margin:-4px 8px 14px">เครดิตใช้ได้ทั้งจอง Wellness (หักให้เอง) และที่คาเฟ่ (แจ้งพนักงาน)</p>';
 
   // รางวัล
   if (rewards.length) {
@@ -1647,11 +1660,13 @@ async function loadHistory() {
 
 function histList(list) {
   return '<ul class="hist">' + list.map((t) => {
+    const credit = t.type === 'ใช้เครดิต';
     const title = t.type === 'แลกรางวัล' ? 'แลก ' + esc(t.reward)
+      : credit ? 'ใช้เครดิตที่คาเฟ่'
       : esc(t.service || 'ได้แต้ม') + (t.amount ? ' · ' + baht(t.amount) + ' บาท' : '');
-    const cls = t.points > 0 ? 'plus' : t.points < 0 ? 'minus' : '';
+    const cls = credit || t.points < 0 ? 'minus' : t.points > 0 ? 'plus' : '';
     return '<li><div><div>' + title + '</div><div class="muted small">' + formatDate(t.time, true) + '</div></div>' +
-      '<div class="p ' + cls + '">' + (t.points > 0 ? '+' : '') + t.points + '</div></li>';
+      '<div class="p ' + cls + '">' + (credit ? '−' + baht(t.amount) + '.-' : (t.points > 0 ? '+' : '') + t.points) + '</div></li>';
   }).join('') + '</ul>';
 }
 
@@ -1723,7 +1738,7 @@ function policyLines(b) {
   const out = [];
   if (b.depositPct) out.push('ชำระมัดจำ ' + b.depositPct + '% ภายใน ' + b.holdMin + ' นาที มิฉะนั้นรอบจะถูกปล่อยให้คนอื่นจอง');
   out.push('เลื่อนนัดได้ฟรี 1 ครั้ง ก่อนเวลาอย่างน้อย ' + b.cancelHours + ' ชม.');
-  out.push('ยกเลิกก่อน ' + b.cancelHours + ' ชม. มัดจำเก็บเป็นเครดิต ใช้จองครั้งถัดไปได้ภายใน ' + b.creditDays + ' วัน');
+  out.push('ยกเลิกก่อน ' + b.cancelHours + ' ชม. มัดจำเก็บเป็นเครดิต ใช้ได้ทั้งจอง Wellness และที่คาเฟ่ ภายใน ' + b.creditDays + ' วัน');
   out.push('ยกเลิกน้อยกว่า ' + b.cancelHours + ' ชม. หรือไม่มาตามนัด ไม่คืนมัดจำ');
   return out.concat(b.policyExtra || []);
 }
@@ -1911,11 +1926,19 @@ function renderPick() {
 
   // จำนวนคน
   if (!w.resched) {
-    h += '<div class="card"><div class="card-title">จำนวนผู้ใช้บริการ</div><div class="tiers">' + b.tiers.map((t) =>
-      '<div class="tier' + (c && c.tier === t ? ' on' : '') + '"><b>' + esc(t.label) + '</b><span>' + baht(t.price) + '.-' + (t.max > 1 ? '/ท่าน' : '') + '</span></div>').join('') +
-      '</div><div class="stepper"><button id="pp-minus" aria-label="ลดจำนวน"' + (w.people <= 1 ? ' disabled' : '') + '>−</button>' +
-      '<div class="n"><b>' + w.people + '</b><span>ท่าน · ห้องส่วนตัวทั้งรอบ</span></div>' +
-      '<button id="pp-plus" aria-label="เพิ่มจำนวน"' + (w.people >= b.maxPeople || !calcBooking(w.people + 1, 0) ? ' disabled' : '') + '>+</button></div></div>';
+    // แตะเลือกเรทได้เลย · เรทที่เป็นช่วง (เช่น 3–5 ท่าน) ขึ้นปุ่มเลือกจำนวนให้อีกแถว
+    const tiers = b.tiers.filter((t) => t.min <= b.maxPeople);
+    const cur = c ? c.tier : null;
+    h += '<div class="card"><div class="card-title">จำนวนผู้ใช้บริการ</div><div class="tiers">' + tiers.map((t, i) =>
+      '<button class="tier' + (cur === t ? ' on' : '') + '" data-tier="' + i + '"><b>' + esc(t.label) + '</b><span>' + baht(t.price) + '.-' + (t.max > 1 ? '/ท่าน' : '') + '</span></button>').join('') + '</div>';
+    const hi = cur ? Math.min(cur.max, b.maxPeople) : 0;
+    if (cur && hi > cur.min) {
+      const nums = [];
+      for (let n = cur.min; n <= hi; n++) nums.push(n);
+      h += '<p class="small" style="margin:14px 0 8px;color:var(--ink-2)">กี่ท่าน?</p><div class="pnum">' + nums.map((n) =>
+        '<button class="' + (n === w.people ? 'on' : '') + '" data-people="' + n + '">' + n + '<small>ท่าน</small></button>').join('') + '</div>';
+    }
+    h += '<p class="muted small" style="margin-top:12px">' + w.people + ' ท่าน · ห้องส่วนตัวทั้งรอบ</p></div>';
   }
 
   // วันที่
@@ -1968,8 +1991,13 @@ function renderPick() {
     if (w.mine && w.mine.bookings.length) return renderBookList();
     go('wellness', true);
   });
-  if ($('#pp-minus')) $('#pp-minus').onclick = () => { w.people = Math.max(1, w.people - 1); renderPick(); };
-  if ($('#pp-plus')) $('#pp-plus').onclick = () => { w.people = Math.min(b.maxPeople, w.people + 1); renderPick(); };
+  const tierList = b.tiers.filter((t) => t.min <= b.maxPeople);
+  el.querySelectorAll('[data-tier]').forEach((x) => (x.onclick = () => {
+    const t = tierList[Number(x.dataset.tier)];
+    if (!(w.people >= t.min && w.people <= t.max)) w.people = t.min;
+    renderPick();
+  }));
+  el.querySelectorAll('[data-people]').forEach((x) => (x.onclick = () => { w.people = Number(x.dataset.people); renderPick(); }));
   if ($('#slots-retry')) $('#slots-retry').onclick = () => { w.days = null; renderPick(); loadSlots(true); };
   el.querySelectorAll('[data-day]').forEach((x) => (x.onclick = () => { w.date = x.dataset.day; w.time = ''; renderPick(); }));
   el.querySelectorAll('[data-slot]').forEach((x) => (x.onclick = () => { w.time = x.dataset.slot; renderPick(); }));
@@ -2190,7 +2218,7 @@ function renderTicket(bk) {
   }
   if (bk.creditLeft > 0) {
     h += '<div class="notice">' + ICON.gift + '<div>มัดจำ <b>' + baht(bk.creditLeft) + '.-</b> เก็บเป็นเครดิต' +
-      (bk.creditExpiry ? ' ใช้ได้ถึง ' + thDate(bk.creditExpiry, true) : '') + ' · หักให้อัตโนมัติตอนจองครั้งถัดไป</div></div>';
+      (bk.creditExpiry ? ' ใช้ได้ถึง ' + thDate(bk.creditExpiry, true) : '') + ' · ใช้จอง Wellness หรือแจ้งพนักงานที่คาเฟ่</div></div>';
   }
   if (bk.status === BST.HOLD) h += '<button class="btn sea" id="tk-pay">ไปชำระมัดจำ</button>';
   const btns = [];
@@ -2216,7 +2244,7 @@ async function cancelBooking(bk) {
   let msg = 'ยกเลิกการจอง ' + thDate(bk.date) + ' ' + bk.time + ' น.?';
   if (bk.status === BST.OK) {
     msg += bk.cancelGetsCredit
-      ? '\n\nมัดจำ ' + baht(bk.credit + bk.payDue) + ' บาท จะเก็บเป็นเครดิต ใช้ได้ ' + b.creditDays + ' วัน'
+      ? '\n\nมัดจำ ' + baht(bk.credit + bk.payDue) + ' บาท จะเก็บเป็นเครดิต ใช้ได้ทั้ง Wellness และคาเฟ่ ' + b.creditDays + ' วัน'
       : '\n\nเหลือเวลาน้อยกว่า ' + b.cancelHours + ' ชม. จะไม่ได้รับมัดจำคืน';
   }
   if (!confirm(msg)) return;
@@ -2542,6 +2570,17 @@ function renderStaffMember() {
     }).join('') + '</div>';
   }
 
+  // ใช้เครดิตเงินสด
+  if (m.credit) {
+    h += '<div class="card"><div class="card-title">💳 เครดิตเงินสด ' + baht(m.credit.amount) + '.-</div>' +
+      '<p class="muted small" style="margin-top:-6px">' + (m.credit.expiry ? 'ใช้ได้ถึง ' + thDate(m.credit.expiry, true) + ' · ' : '') +
+      'หักเป็นค่าอาหาร/เครื่องดื่มแทนเงินสดได้</p>' +
+      '<form id="f-credit" novalidate><div class="row" style="margin-top:10px">' +
+      '<input class="input" id="cr-amt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="ยอดที่ใช้" style="flex:2">' +
+      '<button class="btn soft" type="submit" id="btn-credit" style="flex:1">ใช้เครดิต</button></div>' +
+      '<p class="muted small" style="margin-top:6px">ใส่ยอดไม่เกิน ' + baht(m.credit.amount) + ' บาท · ส่วนที่เกินเก็บเงินตามปกติ</p></form></div>';
+  }
+
   // ประวัติล่าสุด
   if (state.staffRecent && state.staffRecent.length) {
     h += '<div class="card"><div class="card-title">ล่าสุด</div>' + histList(state.staffRecent) + '</div>';
@@ -2554,6 +2593,8 @@ function renderStaffMember() {
   box.querySelectorAll('[data-svc]').forEach((b) => (b.onclick = () => { state.staffService = b.dataset.svc; renderStaffMember(); }));
   box.querySelectorAll('[data-redeem]').forEach((b) => (b.onclick = () => redeem(b.dataset.redeem)));
   $('#btn-next').onclick = () => { state.staffMember = null; box.innerHTML = ''; $('#q').value = ''; window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+  if ($('#f-credit')) $('#f-credit').onsubmit = (ev) => { ev.preventDefault(); useCredit(); };
 
   const form = $('#f-earn');
   if (form) {
@@ -2614,6 +2655,26 @@ async function earn() {
   } catch (e) {
     if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
     btn.disabled = false; updatePreview();
+  }
+}
+
+async function useCredit() {
+  const m = state.staffMember;
+  const amount = Math.round(num($('#cr-amt').value) * 100) / 100;
+  if (!(amount > 0)) return toast('กรอกยอดที่ใช้', 'error');
+  if (amount > m.credit.amount) return toast('เครดิตไม่พอ (มี ' + baht(m.credit.amount) + ' บาท)', 'error');
+  if (!confirm('ใช้เครดิต ' + baht(amount) + ' บาท ของ ' + m.displayName + '?')) return;
+  const btn = $('#btn-credit');
+  btn.disabled = true;
+  try {
+    const out = await api('useCredit', { memberId: m.memberId, amount: amount, receiptNo: $('#rcp') ? $('#rcp').value.trim() : '' });
+    state.staffMember = out.member;
+    state.staffRecent = out.recent;
+    renderStaffMember();
+    toast('ใช้เครดิต ' + baht(amount) + ' บาทแล้ว · คงเหลือ ' + baht(out.member.credit ? out.member.credit.amount : 0), 'ok');
+  } catch (e) {
+    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
+    btn.disabled = false;
   }
 }
 
