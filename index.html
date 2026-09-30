@@ -467,21 +467,30 @@
     .stepper .n { text-align: center; }
     .stepper .n b { font-family: var(--font-en); font-size: 34px; line-height: 1.1; }
     .stepper .n span { display: block; font-size: 12.5px; color: var(--muted); }
-    .days { display: flex; gap: 8px; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 4px; scrollbar-width: none; }
-    .days::-webkit-scrollbar { display: none; }
-    .day { flex: none; width: 58px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; text-align: center; padding: 7px 0 6px; font-family: var(--font); color: var(--ink); cursor: pointer; }
-    .day small { display: block; font-size: 11px; color: var(--muted); }
-    .day b { font-size: 19px; font-family: var(--font-en); }
-    .day i { display: block; font-style: normal; font-size: 10.5px; color: var(--muted); }
-    .day.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-    .day.on small, .day.on i { color: #cfc6b8; }
-    .day:disabled { opacity: .38; cursor: default; }
-    .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .slot { border-radius: 12px; border: 1.5px solid var(--line); background: #fff; text-align: center; padding: 9px 0; font: 600 16px var(--font-en); color: var(--ink); cursor: pointer; }
-    .slot small { display: block; font: 400 11px var(--font); color: var(--muted); }
-    .slot:disabled { background: #EFEAE2; color: #B5ADA2; border-color: #EFEAE2; cursor: default; }
+    .cal-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .cal-h b { font-size: 16px; }
+    .cal-h button { width: 36px; height: 36px; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: 600 18px var(--font-en); cursor: pointer; }
+    .cal-h button:disabled { opacity: .3; cursor: default; }
+    .cal-w, .cal-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; text-align: center; }
+    .cal-w span { font-size: 11px; color: var(--muted); padding: 2px 0 5px; }
+    .cd { height: 44px; border: 0; border-radius: 12px; background: transparent; font: 600 15px var(--font-en); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+    .cd i { width: 5px; height: 5px; border-radius: 50%; margin-top: 3px; background: transparent; }
+    .cd.few i { background: #D39B45; }
+    .cd.full { color: #B5ADA2; } .cd.full i { background: var(--danger); }
+    .cd.off { color: #C9C0B3; font-weight: 400; text-decoration: line-through; }
+    .cd.na { color: #D4CCBF; font-weight: 400; }
+    .cd:disabled { cursor: default; }
+    .cd.today { box-shadow: inset 0 0 0 1.5px var(--gold); }
+    .cd.on { background: var(--sea); color: #fff; } .cd.on i { background: #fff; }
+    .cal-lg { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+    .cal-lg span { display: inline-flex; align-items: center; gap: 5px; }
+    .cal-lg i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .tsec { font-size: 12.5px; color: var(--muted); margin: 12px 0 7px; }
+    .tsec:first-child { margin-top: 0; }
+    .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+    .slot { border-radius: 12px; border: 1.5px solid var(--line); background: #fff; text-align: center; padding: 10px 0; font: 600 15px var(--font-en); color: var(--ink); cursor: pointer; }
+    .slot:disabled { background: #EFEAE2; color: #BDB5AA; border-color: #EFEAE2; cursor: default; text-decoration: line-through; font-weight: 500; }
     .slot.on { background: var(--sea); border-color: var(--sea); color: #fff; }
-    .slot.on small { color: #d6e7ec; }
     .bbar {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(255,255,255,.97); backdrop-filter: blur(8px);
       border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
@@ -624,13 +633,10 @@
 
 const CONFIG = {
 
-  // หลังบ้านใหม่ (Supabase): ข้อมูลร้าน เมนู สมาชิก แต้ม ใบเสร็จ
+  // หลังบ้าน (Supabase): ข้อมูลร้าน เมนู สมาชิก แต้ม ใบเสร็จ การจอง Wellness เครดิต
   NEW_API: 'https://royemjvugkpujrjnmylo.supabase.co/functions/v1/liff-api',
 
-  // ระบบเดิม (Apps Script): ยังใช้กับการจอง Wellness + เครดิต จนกว่าจะย้าย (ขั้นที่ 4)
-  API_URL: 'https://script.google.com/macros/s/AKfycbyYA6yHw18LQedaQgK_k3mxWQnBv8P9BJFVaMidV5wk3OjX7Rs_tPE_pBzn-kssvcdR/exec',
-
-  // หลังบ้านสำหรับพนักงาน (ให้แต้ม · แลกรางวัล · ขาย)
+  // หลังบ้านสำหรับพนักงาน (ขาย · สมาชิก · การจอง)
   BACKOFFICE_URL: 'https://2325-admin.2325-studio.workers.dev/',
 
   // LIFF ID จาก LINE Developers
@@ -710,7 +716,10 @@ const ERROR_TEXT = {
   RESCHEDULE_USED: 'ใช้สิทธิ์เลื่อนนัดครบแล้ว กรุณาติดต่อร้าน',
   BAD_IMAGE: 'อ่านรูปสลิปไม่ได้ ลองเลือกรูปใหม่',
   IMAGE_TOO_BIG: 'รูปใหญ่เกินไป ลองแคปหน้าจอสลิปแทน',
-  UNKNOWN_ACTION: 'หลังบ้านยังเป็นเวอร์ชันเก่า (ต้อง Deploy > New version)',
+  UNKNOWN_ACTION: 'หลังบ้านยังเป็นเวอร์ชันเก่า (ต้องอัปเดตโค้ด liff-api)',
+  NEED_MEMBER: 'สมัครสมาชิกก่อนจอง (ฟรี · ไม่ถึงนาที)',
+  UPLOAD_FAILED: 'อัปโหลดสลิปไม่สำเร็จ ลองใหม่อีกครั้ง',
+  CODE_EXPIRED: 'ลิงก์หมดอายุ ขอลิงก์ใหม่ในหลังบ้าน',
 };
 
 
@@ -724,9 +733,7 @@ const state = {
   dataKey: '',
   liffReady: false,
   me: null,            // ข้อมูลสมาชิกของฉัน
-  staffMember: null,   // สมาชิกที่พนักงานกำลังดู
-  staffService: null,
-  wb: { step: '', people: 1, date: '', time: '', days: null, mine: null, booking: null, resched: null, slip: '' },
+  wb: { step: '', people: 1, date: '', time: '', month: '', days: null, mine: null, booking: null, resched: null, slip: '' },
 };
 let dataResolve;
 const dataReady = new Promise((r) => (dataResolve = r));
@@ -853,17 +860,6 @@ function formatDate(v, withTime) {
 // ════════════════════════════════════════════════════════════════
 
 const CACHE_KEY = 'app2325:public:' + CONFIG.NEW_API.slice(-12);
-const WELL_KEY = 'app2325:wellness:' + CONFIG.API_URL.slice(-12);
-
-/** ส่วน Wellness ยังอยู่ระบบเดิม → โหลดแยก แล้วรวมเข้ากับข้อมูลร้าน */
-async function loadWellnessOld() {
-  try {
-    const res = await fetch(CONFIG.API_URL + '?action=public', { cache: 'no-store' });
-    const d = await res.json();
-    if (d && d.ok) { store('set', WELL_KEY, d.wellness || null); return d.wellness || null; }
-  } catch (e) { debug('โหลด Wellness (ระบบเดิม) ไม่สำเร็จ: ' + e.message); }
-  return undefined;
-}
 
 async function loadPublic() {
   const cached = store('get', CACHE_KEY);
@@ -874,11 +870,6 @@ async function loadPublic() {
 
   const t0 = Date.now();
   debug('เริ่มโหลดข้อมูลจากหลังบ้าน…');
-  const wellP = loadWellnessOld();
-  wellP.then((w) => {
-    if (w === undefined || !state.data) return;
-    if (JSON.stringify(w) !== JSON.stringify(state.data.wellness)) setData(Object.assign({}, state.data, { wellness: w }));
-  });
   try {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = setTimeout(() => ctrl && ctrl.abort(), 30000); // รอสูงสุด 30 วินาที
@@ -897,7 +888,6 @@ async function loadPublic() {
     }
     if (!d.ok) throw new Error(d.error || 'SERVER_ERROR');
     debug('ได้ข้อมูลแล้ว: เมนู ' + d.menu.length + ' หมวด');
-    d.wellness = store('get', WELL_KEY) || (state.data && state.data.wellness) || null;
     store('set', CACHE_KEY, d);
     setData(d);
   } catch (e) {
@@ -923,7 +913,6 @@ function setData(d) {
   safeRender('promos', renderPromos);
   if (state.page === 'reward' && state.me) renderMember();
   if ($('#staff-shop')) $('#staff-shop').textContent = d.shop.shopName;
-  if (state.page === 'staff' && state.staffMember) renderStaffMember();
 }
 
 /** ถ้าหน้าไหนแสดงผลพัง ให้ขึ้นข้อความแทนการค้าง */
@@ -1420,11 +1409,9 @@ async function requireLogin(page) {
   }
 }
 
-/** เรียก API ที่ต้องยืนยันตัวตน
- *  การจอง Wellness (wb…) + คำขอที่ระบุ old → ระบบเดิม · ที่เหลือ → หลังบ้านใหม่ */
-async function api(action, data, opts) {
-  const useOld = /^wb/.test(action) || (opts && opts.old);
-  const endpoint = useOld ? CONFIG.API_URL : CONFIG.NEW_API;
+/** เรียก API ที่ต้องยืนยันตัวตน (หลังบ้าน Supabase) */
+async function api(action, data) {
+  const endpoint = CONFIG.NEW_API;
   const idToken = liff.getIDToken();
   if (!idToken) {
     // ยังไม่มีบัตรยืนยันตัวตน (เพิ่งเปิดสิทธิ์ openid) → ล็อกอินใหม่ 1 ครั้ง
@@ -1452,7 +1439,7 @@ async function api(action, data, opts) {
     } catch (e) {
       throw new Error('NETWORK');
     }
-    debug('API ' + (useOld ? '[เดิม] ' : '') + action + ' (' + attempt + ') → ' + JSON.stringify(out).slice(0, 160));
+    debug('API ' + action + ' (' + attempt + ') → ' + JSON.stringify(out).slice(0, 160));
     // ได้คำตอบของ doGet แทน doPost = คำขอถูกเปลี่ยนเป็น GET ระหว่างทาง (หลังบ้านยังไม่ได้ทำงาน) → ส่งใหม่ได้ปลอดภัย
     const gotGet = out.ok && out.message && !out.via && !out.profile && !out.member && !out.recent;
     if (!gotGet) break;
@@ -1506,31 +1493,7 @@ function saveMe(me) {
 
 /** ข้อมูลของฉัน: แต้ม/สมาชิกจากหลังบ้านใหม่ (เร็ว) + การจอง/เครดิต/สิทธิ์พนักงานจากระบบเดิม (ตามมาทีหลัง) */
 async function fetchMe() {
-  const me = await api('me');
-  const prev = state.me || cachedMe();
-  if (prev && prev.profile && prev.profile.userId === me.profile.userId) {   // ใช้ค่าจากระบบเดิมที่เคยได้ ระหว่างรอ
-    me.booking = prev.booking || null;
-    me.isStaff = !!prev.isStaff; me.staffName = prev.staffName || null;
-    if (me.member && prev.member && prev.member.credit) me.member.credit = prev.member.credit;
-  }
-  mergeOldMe(me);
-  return me;
-}
-let oldMeBusy = false;
-async function mergeOldMe(me) {
-  if (oldMeBusy) return;
-  oldMeBusy = true;
-  try {
-    const o = await api('me', null, { old: true });
-    if (!o.profile || o.profile.userId !== me.profile.userId) return;
-    me.booking = o.booking || null;
-    me.isStaff = !!o.isStaff; me.staffName = o.staffName || null;
-    if (me.member) me.member.credit = (o.member && o.member.credit) || null;
-    saveMe(me);
-    if (state.page === 'reward') renderMember();
-  } catch (e) {
-    debug('ข้อมูลการจอง (ระบบเดิม) ไม่มา: ' + e.message);
-  } finally { oldMeBusy = false; }
+  return await api('me');
 }
 
 function cachedMe() {
@@ -1625,6 +1588,14 @@ function renderRegister() {
       state.me.member = out.member;
       saveMe(state.me);
       toast('สมัครสมาชิกเรียบร้อย 🎉', 'ok');
+      if (state.afterRegister === 'book') {        // มาจากหน้าจอง → กลับไปจองต่อ
+        state.afterRegister = '';
+        if (state.wb.mine) state.wb.mine.needMember = false;
+        state.wb.mine = null;
+        store('set', MINE_KEY, null);
+        state.wb.intent = state.wb.date && state.wb.time ? 'resume' : 'new';
+        return go('book', true);
+      }
       renderCard(out.member);
     } catch (e) {
       if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
@@ -1738,13 +1709,15 @@ function billList(list) {
 
 function histList(list) {
   return '<ul class="hist">' + list.map((t) => {
-    const credit = t.type === 'ใช้เครดิต';
+    const use = t.type === 'ใช้เครดิต', add = t.type === 'ได้เครดิต';
     const title = t.type === 'แลกรางวัล' ? 'แลก ' + esc(t.reward)
-      : credit ? 'ใช้เครดิตที่คาเฟ่'
+      : use ? esc(t.service || 'ใช้เครดิต')
+      : add ? esc(t.service || 'ได้เครดิตมัดจำ')
       : esc(t.service || 'ได้แต้ม') + (t.amount ? ' · ' + baht(t.amount) + ' บาท' : '');
-    const cls = credit || t.points < 0 ? 'minus' : t.points > 0 ? 'plus' : '';
-    return '<li><div><div>' + title + '</div><div class="muted small">' + formatDate(t.time, true) + '</div></div>' +
-      '<div class="p ' + cls + '">' + (credit ? '−' + baht(t.amount) + '.-' : (t.points > 0 ? '+' : '') + t.points) + '</div></li>';
+    const cls = use || t.points < 0 ? 'minus' : t.points > 0 || add ? 'plus' : '';
+    const val = use ? '−' + baht(t.amount) + '.-' : add ? '+' + baht(t.amount) + '.-' : (t.points > 0 ? '+' : '') + t.points;
+    return '<li><div><div>' + title + '</div><div class="muted small">' + formatDate(t.time, true) + (use || add ? ' · เครดิต' : '') + '</div></div>' +
+      '<div class="p ' + cls + '">' + val + '</div></li>';
   }).join('') + '</ul>';
 }
 
@@ -1774,6 +1747,7 @@ document.addEventListener('visibilitychange', () => {
 
 const BST = { HOLD: 'รอชำระมัดจำ', SLIP: 'รอตรวจสลิป', OK: 'ยืนยันแล้ว', IN: 'เช็กอินแล้ว' };
 const TH_DOW = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const TH_MON_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 const TH_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
 function isoParts(iso) {
@@ -1870,6 +1844,7 @@ async function openBook() {
 /** เลือกหน้าที่จะเปิดตามปุ่มที่กดมา */
 function routeBook(intent) {
   const m = state.wb.mine;
+  const w = state.wb;
   const all = m.bookings.concat(m.past);
   if (intent.indexOf('open:') === 0) {                       // แตะการ์ดนัดบนหน้าแรก
     const bk = all.find((b) => b.id === intent.slice(5));
@@ -1877,7 +1852,8 @@ function routeBook(intent) {
   }
   const hold = m.bookings.find((b) => b.status === BST.HOLD);
   if (hold) { renderPay(hold); return true; }                // ค้างจ่ายมัดจำ → ไปหน้าจ่ายก่อน
-  if (intent === 'new') { startPick(); return true; }        // กด "จองคิว"
+  if (intent === 'resume' && w.date && w.time && !m.needMember) { renderConfirm(); return true; }   // สมัครสมาชิกแล้ว → ยืนยันต่อ
+  if (intent === 'new' || intent === 'resume') { startPick(); return true; }        // กด "จองคิว"
   if (intent === 'mine' || m.bookings.length || m.past.length) { renderBookList(); return true; } // กด "การจองของฉัน"
   startPick();
   return true;
@@ -1930,7 +1906,7 @@ async function loadSlots(force) {
   }
   w.slotsAt = Date.now();
   try {
-    const res = await fetch(CONFIG.API_URL + '?action=slots', { cache: 'no-store' });
+    const res = await fetch(CONFIG.NEW_API + '?action=slots', { cache: 'no-store' });
     const d = await res.json();
     if (!d.ok) throw new Error(d.error || 'SERVER_ERROR');
     w.days = d.days;
@@ -1956,6 +1932,7 @@ function startPick(resched) {
   w.people = resched ? resched.people : Math.max(1, w.people || 1);
   w.date = '';
   w.time = '';
+  w.month = '';
   w.step = 'pick';
   renderPick();
   window.scrollTo(0, 0);
@@ -1988,9 +1965,8 @@ function renderPick() {
   const days = w.days;
   if (days && !w.date) {
     const d = days.find((x) => x.slots.some((s) => s.s === 'free'));
-    if (d) w.date = d.date;
+    if (d) { w.date = d.date; w.month = d.date.slice(0, 7); }
   }
-  const keepScroll = $('#days') ? $('#days').scrollLeft : null;
 
   let h = bkHead(w.resched ? 'Reschedule' : 'Book · ' + bkTitle(), w.resched ? 'เลื่อนนัด' : 'จองคิว Wellness',
     w.resched ? 'การจองของฉัน' : (w.mine && w.mine.bookings.length ? 'การจองของฉัน' : 'Wellness'));
@@ -2019,35 +1995,62 @@ function renderPick() {
     h += '<p class="muted small" style="margin-top:12px">' + w.people + ' ท่าน · ห้องส่วนตัวทั้งรอบ</p></div>';
   }
 
-  // วันที่
-  const sel = w.date ? isoParts(w.date) : null;
-  h += '<div class="card"><div class="card-title">วันที่' + (sel ? ' <span class="muted small" style="font-weight:400">· ' + TH_MON[sel.mon] + ' ' + (sel.year + 543) + '</span>' : '') + '</div>';
-  if (!days) h += '<div class="skeleton" style="height:66px"></div>';
+  // วันที่: ปฏิทินรายเดือน
+  const today = isoToday();
+  const byDate = {};
+  (days || []).forEach((d) => (byDate[d.date] = d));
+  const lastDay = days && days.length ? days[days.length - 1].date : today;
+  if (!w.month) w.month = (w.date || today).slice(0, 7);
+  const mY = Number(w.month.slice(0, 4)), mM = Number(w.month.slice(5, 7));
+  const first = new Date(Date.UTC(mY, mM - 1, 1)), nDays = new Date(Date.UTC(mY, mM, 0)).getUTCDate();
+  const monthIso = (y, m) => y + '-' + String(m).padStart(2, '0');
+  const prevM = mM === 1 ? monthIso(mY - 1, 12) : monthIso(mY, mM - 1);
+  const nextM = mM === 12 ? monthIso(mY + 1, 1) : monthIso(mY, mM + 1);
+  h += '<div class="card"><div class="cal-h"><button id="cal-prev"' + (prevM < today.slice(0, 7) ? ' disabled' : '') + '>‹</button>' +
+    '<b>' + TH_MON_FULL[mM - 1] + ' ' + (mY + 543) + '</b><button id="cal-next"' + (nextM > lastDay.slice(0, 7) ? ' disabled' : '') + '>›</button></div>';
+  if (!days) h += '<div class="skeleton" style="height:250px"></div>';
   else if (!days.length) h += '<p class="muted small">' + (w.slotErr ? errText(new Error(w.slotErr)) : 'ยังไม่มีรอบให้จอง') + '</p><button class="btn soft" id="slots-retry" style="margin-top:10px">ลองใหม่</button>';
   else {
-    h += '<div class="days" id="days">' + days.map((d) => {
-      const p = isoParts(d.date);
-      const free = d.slots.filter((s) => s.s === 'free').length;
-      const lab = !d.slots.length ? 'ปิด' : free ? 'ว่าง ' + free : 'เต็ม';
-      return '<button class="day' + (d.date === w.date ? ' on' : '') + '" data-day="' + d.date + '"' + (free ? '' : ' disabled') + '>' +
-        '<small>' + (d.date === isoToday() ? 'วันนี้' : TH_DOW[p.dow]) + '</small><b>' + p.day + '</b><i>' + lab + '</i></button>';
-    }).join('') + '</div>';
+    h += '<div class="cal-w">' + ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((x) => '<span>' + x + '</span>').join('') + '</div><div class="cal-g">';
+    for (let i = 0; i < first.getUTCDay(); i++) h += '<span></span>';
+    for (let dd = 1; dd <= nDays; dd++) {
+      const iso = w.month + '-' + String(dd).padStart(2, '0');
+      const d = byDate[iso];
+      let cls = 'cd', ok = false;
+      if (!d) cls += ' na';
+      else if (!d.slots.length) cls += ' off';
+      else {
+        const free = d.slots.filter((x) => x.s === 'free').length;
+        const open = d.slots.filter((x) => x.s !== 'past').length;
+        if (!free) cls += ' full';
+        else { ok = true; if (free <= Math.max(2, Math.floor(open / 4))) cls += ' few'; }
+      }
+      if (iso === today) cls += ' today';
+      if (iso === w.date) cls += ' on';
+      h += '<button class="' + cls + '" data-day="' + iso + '"' + (ok ? '' : ' disabled') + '>' + dd + '<i></i></button>';
+    }
+    h += '</div><div class="cal-lg"><span><i style="background:#D39B45"></i>เหลือน้อย</span><span><i style="background:var(--danger)"></i>เต็ม</span>' +
+      '<span><s>12</s> = ร้านปิด</span></div>';
   }
   h += '</div>';
 
-  // รอบเวลา
+  // เวลาเริ่ม (แบ่ง เช้า / สาย / บ่าย)
   const day = days && days.find((d) => d.date === w.date);
-  h += '<div class="card"><div class="card-title">รอบเวลา <span class="muted small" style="font-weight:400">· ใช้บริการ ' + b.sessionMin + ' นาที</span></div>';
+  h += '<div class="card"><div class="card-title">เวลาเริ่ม' + (day ? ' <span class="muted small" style="font-weight:400">· ' + thDate(w.date) + ' · 1 รอบ ' + b.sessionMin + ' นาที</span>' : '') + '</div>';
   if (!days) h += '<div class="skeleton" style="height:120px"></div>';
-  else if (!day) h += '<p class="muted small">เลือกวันที่ก่อน</p>';
+  else if (!day) h += '<p class="muted small">เลือกวันจากปฏิทินก่อน</p>';
   else {
-    const list = day.slots.filter((s) => s.s !== 'past');
-    h += '<div class="slots">' + list.map((s) => {
-      const on = s.t === w.time;
-      return '<button class="slot' + (on ? ' on' : '') + '" data-slot="' + s.t + '"' + (s.s === 'free' ? '' : ' disabled') + '>' + s.t +
-        '<small>' + (on ? 'เลือกแล้ว' : s.s === 'free' ? 'ว่าง' : 'เต็ม') + '</small></button>';
-    }).join('') + '</div>';
-    if (list.length < day.slots.length) h += '<p class="muted small" style="margin-top:10px">รอบที่ใกล้เวลาหรือผ่านไปแล้วจองไม่ได้</p>';
+    const list = day.slots.filter((x) => x.s !== 'past');
+    const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    const groups = [['🌅 เช้า', 0, 600], ['☀️ สาย – เที่ยง', 600, 780], ['🌤 บ่าย – เย็น', 780, 1440]];
+    groups.forEach((g) => {
+      const part = list.filter((x) => toMin(x.t) >= g[1] && toMin(x.t) < g[2]);
+      if (!part.length) return;
+      h += '<div class="tsec">' + g[0] + '</div><div class="slots">' + part.map((x) =>
+        '<button class="slot' + (x.t === w.time ? ' on' : '') + '" data-slot="' + x.t + '"' + (x.s === 'free' ? '' : ' disabled') + '>' + x.t + '</button>').join('') + '</div>';
+    });
+    if (!list.length) h += '<p class="muted small">วันนี้เลยเวลาจองแล้ว ลองเลือกวันอื่น</p>';
+    else h += '<p class="muted small" style="margin-top:10px">เวลาที่ขีดฆ่า = ชนกับคิวอื่น · ต้องจองก่อนเวลาเริ่มอย่างน้อย ' + (b.leadMin || 60) + ' นาที</p>';
   }
   h += '</div>';
 
@@ -2061,8 +2064,6 @@ function renderPick() {
 
   el.innerHTML = h;
   document.body.classList.add('has-bbar');
-  if (keepScroll != null && $('#days')) $('#days').scrollLeft = keepScroll;
-  else if ($('#days .day.on')) $('#days .day.on').scrollIntoView({ block: 'nearest', inline: 'center' });
 
   onBack(() => {
     if (w.resched) return renderTicket(w.resched);
@@ -2078,6 +2079,8 @@ function renderPick() {
   el.querySelectorAll('[data-people]').forEach((x) => (x.onclick = () => { w.people = Number(x.dataset.people); renderPick(); }));
   if ($('#slots-retry')) $('#slots-retry').onclick = () => { w.days = null; renderPick(); loadSlots(true); };
   el.querySelectorAll('[data-day]').forEach((x) => (x.onclick = () => { w.date = x.dataset.day; w.time = ''; renderPick(); }));
+  if ($('#cal-prev')) $('#cal-prev').onclick = () => { const y = Number(w.month.slice(0, 4)), m = Number(w.month.slice(5, 7)); w.month = m === 1 ? (y - 1) + '-12' : y + '-' + String(m - 1).padStart(2, '0'); renderPick(); };
+  if ($('#cal-next')) $('#cal-next').onclick = () => { const y = Number(w.month.slice(0, 4)), m = Number(w.month.slice(5, 7)); w.month = m === 12 ? (y + 1) + '-01' : y + '-' + String(m + 1).padStart(2, '0'); renderPick(); };
   el.querySelectorAll('[data-slot]').forEach((x) => (x.onclick = () => { w.time = x.dataset.slot; renderPick(); }));
   $('#bk-next').onclick = () => (w.resched ? doReschedule() : renderConfirm());
 }
@@ -2092,6 +2095,16 @@ function renderConfirm() {
   document.body.classList.remove('has-bbar');
 
   let h = bkHead('Confirm', 'ยืนยันการจอง');
+  if (w.mine && w.mine.needMember) {
+    h += '<div class="card center"><p style="font-size:30px">🪪</p><p class="card-title">สมัครสมาชิกก่อนจอง</p>' +
+      '<p class="muted small">ฟรี ไม่ถึงนาที · ได้แต้มสะสมจากการใช้บริการ และเก็บมัดจำเป็นเครดิตได้ถ้ายกเลิกทันเวลา</p>' +
+      '<button class="btn sea" id="bk-reg" style="margin-top:14px">สมัครสมาชิก</button></div>';
+    $('#view-book').innerHTML = h;
+    window.scrollTo(0, 0);
+    onBack(() => { w.step = 'pick'; renderPick(); });
+    $('#bk-reg').onclick = () => { state.afterRegister = 'book'; go('reward', true); };
+    return;
+  }
   h += '<div class="card">' +
     li('บริการ', esc(bkTitle()) + ' · ' + b.sessionMin + ' นาที') +
     li('วัน-เวลา', thDate(w.date) + ' · ' + w.time + ' น.') +
@@ -2129,6 +2142,7 @@ function renderConfirm() {
       if (e.message === 'REDIRECTING') return;
       toast(errText(e), 'error');
       if (e.message === 'SLOT_TAKEN' || e.message === 'INVALID_SLOT') { w.time = ''; w.step = 'pick'; renderPick(); loadSlots(true); return; }
+      if (e.message === 'NEED_MEMBER') { state.afterRegister = 'book'; go('reward', true); return; }
       btn.disabled = false; btn.textContent = c.payDue > 0 ? 'ไปชำระมัดจำ ' + baht(c.payDue) + '.-' : 'ยืนยันการจอง';
     }
   };
@@ -2416,361 +2430,50 @@ document.addEventListener('visibilitychange', async () => {
 //  ส่วนที่ 11: โหมดพนักงาน   ⛔ ไม่ต้องแก้
 // ════════════════════════════════════════════════════════════════
 
+/** อ่านค่าจากลิงก์ (รองรับตอน LINE ส่งมาเป็น liff.state) */
+function urlParam(name) {
+  const q = new URLSearchParams(location.search);
+  let v = q.get(name);
+  const st = q.get('liff.state');
+  if (!v && st) {
+    const x = st.indexOf('?') >= 0 ? st.slice(st.indexOf('?') + 1) : st;
+    v = new URLSearchParams(x).get(name);
+  }
+  return v || '';
+}
+
+/** โหมดพนักงาน: งานร้านย้ายไปหลังบ้านแล้ว · หน้านี้ใช้เชื่อม LINE รับแจ้งเตือน */
 async function openStaff() {
   const el = $('#view-staff');
   if (!CONFIG.LIFF_ID) { el.innerHTML = notReadyHtml('โหมดพนักงาน'); return; }
   el.innerHTML = '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span></div>' + spinner();
+  const code = urlParam('code').replace(/\D/g, '');
   try {
     await requireLogin('staff');
-    state.me = await api('me', null, { old: true });   // สิทธิ์พนักงานยังอยู่ระบบเดิม (ใช้กับการจอง Wellness)
-    if (!state.me.isStaff) return renderNotStaff();
-    renderStaffHome();
+    if (code) {
+      const out = await api('staffLink', { code: code });
+      try { history.replaceState(null, '', location.pathname + '?page=staff'); } catch (e) { /* ignore */ }
+      el.innerHTML = '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span><h1 style="margin-top:10px">เชื่อม LINE แล้ว ✅</h1></div>' +
+        '<div class="card"><p>คุณ <b>' + esc(out.staffName) + '</b> จะได้รับแจ้งเตือนทาง LINE นี้ เมื่อมีสลิปมัดจำใหม่ ลูกค้ายกเลิก หรือเลื่อนนัด</p></div>' +
+        '<button class="btn gold" id="btn-bo">เปิดหลังบ้าน</button>';
+      $('#btn-bo').onclick = () => openLink(CONFIG.BACKOFFICE_URL);
+      return;
+    }
+    const me = await api('me');
+    el.innerHTML = '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span>' +
+      '<h1 style="margin-top:10px">' + (me.isStaff ? 'สวัสดี คุณ' + esc(me.staffName) : 'ยังไม่ได้เชื่อม LINE') + '</h1></div>' +
+      '<div class="card"><p>งานของร้านทั้งหมด (ขาย · สมาชิก · แต้ม · การจอง Wellness) ย้ายไปที่ <b>หลังบ้าน</b> แล้ว</p>' +
+      (me.isStaff ? '<p class="muted small" style="margin-top:8px">LINE นี้รับแจ้งเตือนการจองอยู่</p>'
+        : '<p class="muted small" style="margin-top:8px">อยากรับแจ้งเตือนการจองทาง LINE: เข้าหลังบ้าน → บัญชีของฉัน → <b>เชื่อม LINE</b> แล้วเปิดลิงก์ที่ได้ในแอป LINE</p>') +
+      '</div><button class="btn gold" id="btn-bo">เปิดหลังบ้าน</button>';
+    $('#btn-bo').onclick = () => openLink(CONFIG.BACKOFFICE_URL);
   } catch (e) {
+    if (e.message === 'CODE_EXPIRED') {
+      el.innerHTML = '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span><h1 style="margin-top:10px">ลิงก์หมดอายุ</h1></div>' +
+        '<div class="card"><p>ขอลิงก์ใหม่ในหลังบ้าน (บัญชีของฉัน → เชื่อม LINE) · ลิงก์ใช้ได้ 10 นาที</p></div>';
+      return;
+    }
     pageError(el, e, openStaff);
-  }
-}
-
-function renderNotStaff() {
-  $('#view-staff').innerHTML =
-    '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span><h1 style="margin-top:10px">ยังไม่มีสิทธิ์</h1></div>' +
-    '<div class="card"><p>ส่งรหัสด้านล่างให้เจ้าของร้าน เพื่อเพิ่มในแท็บ <b>พนักงาน</b></p>' +
-    '<div class="code-box" id="uid">' + esc(state.me.profile.userId) + '</div>' +
-    '<button class="btn soft" id="btn-copy">คัดลอกรหัส</button></div>' +
-    '<button class="btn ghost" onclick="openStaff()">เพิ่มสิทธิ์แล้ว · โหลดใหม่</button>';
-  $('#btn-copy').onclick = async () => {
-    try { await navigator.clipboard.writeText(state.me.profile.userId); toast('คัดลอกแล้ว', 'ok'); }
-    catch (e) {
-      const r = document.createRange(); r.selectNodeContents($('#uid'));
-      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-      toast('กดค้างที่รหัสเพื่อคัดลอก');
-    }
-  };
-}
-
-function renderStaffHome() {
-  const shop = state.data ? state.data.shop.shopName : '';
-  $('#view-staff').innerHTML =
-    '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span>' +
-    '<h1 style="margin-top:10px" id="staff-shop">' + esc(shop) + '</h1>' +
-    '<p class="muted small">ผู้ใช้งาน: ' + esc(state.me.staffName) + '</p></div>' +
-    '<div class="card">' +
-    '<button class="btn gold" id="btn-scan">' + ICON.scan + 'สแกน QR ลูกค้า</button>' +
-    '<form id="f-find" style="margin-top:12px"><div class="row">' +
-    '<input class="input" id="q" type="tel" inputmode="numeric" maxlength="12" placeholder="รหัสสมาชิก / เบอร์โทร" style="flex:2">' +
-    '<button class="btn soft" type="submit" style="flex:1">ค้นหา</button></div></form>' +
-    '<p class="muted small" style="margin-top:8px">สแกน QR การจอง Wellness · ให้แต้ม/แลกรางวัลใช้หลังบ้านใหม่</p></div>' +
-    '<div id="s-member"></div><div id="s-well-wrap"></div>';
-
-  $('#btn-scan').onclick = scanQr;
-  $('#f-find').onsubmit = (ev) => { ev.preventDefault(); const q = $('#q').value.trim(); if (q) lookup(q); };
-  dataReady.then(mountStaffWell); // ต้องรอข้อมูลร้านก่อน (รู้ว่าเปิดระบบจองไหม)
-}
-
-function mountStaffWell() {
-  const wrap = $('#s-well-wrap');
-  if (!bcfg() || !wrap || $('#s-well')) return;
-  wrap.innerHTML = '<div class="card"><div class="card-title">การจอง Wellness</div><div id="s-well"></div></div>';
-  loadStaffBookings();
-}
-
-// ---------- พนักงาน: การจอง Wellness ----------
-async function loadStaffBookings() {
-  const box = $('#s-well');
-  if (!box) return;
-  box.innerHTML = '<div class="skeleton" style="height:60px"></div>';
-  try {
-    state.staffWb = await api('wbStaffList');
-    renderStaffBookings();
-  } catch (e) {
-    if (e.message !== 'REDIRECTING') box.innerHTML = '<p class="muted small">' + errText(e) + '</p>';
-  }
-}
-
-function renderStaffBookings() {
-  const box = $('#s-well');
-  const out = state.staffWb;
-  if (!box || !out) return;
-  const today = isoToday();
-  const todays = out.upcoming.filter((b) => b.date === today);
-  const later = out.upcoming.filter((b) => b.date > today);
-  const group = (title, list, empty) => '<p class="small" style="font-weight:600;margin:14px 0 4px">' + title + ' (' + list.length + ')</p>' +
-    (list.length ? list.map((b) => bookingItem(b, 'data-sb')).join('') : '<p class="muted small">' + empty + '</p>');
-  box.innerHTML = group('🧾 รอตรวจสลิป', out.pending, 'ไม่มีสลิปรอตรวจ').replace('margin:14px', 'margin:0') +
-    group('วันนี้', todays, 'ไม่มีคิววันนี้') + group('วันถัดไป', later, 'ยังไม่มีการจอง') +
-    '<button class="btn ghost" id="btn-wb-reload">โหลดใหม่</button>';
-  box.querySelectorAll('[data-sb]').forEach((x) => (x.onclick = () => openStaffBooking(x.dataset.sb)));
-  $('#btn-wb-reload').onclick = loadStaffBookings;
-}
-
-async function openStaffBooking(id) {
-  const bg = document.createElement('div');
-  bg.className = 'sheet-bg';
-  bg.innerHTML = '<div class="sheet left">' + spinner() + '</div>';
-  bg.addEventListener('click', (e) => { if (e.target === bg) bg.remove(); });
-  document.body.appendChild(bg);
-  try {
-    const out = await api('wbStaffGet', { bookingId: id, withSlip: true });
-    renderStaffBookingSheet(bg, out.booking, out.slipImage);
-  } catch (e) {
-    bg.remove();
-    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
-  }
-}
-
-function renderStaffBookingSheet(bg, b, slip) {
-  const acts = {
-    [BST.SLIP]: '<button class="btn gold" data-op="confirm">✅ สลิปถูกต้อง · ยืนยันการจอง</button>' +
-      '<div class="btn-row"><button class="btn line" data-op="reject">สลิปไม่ผ่าน</button><button class="btn line" data-op="checkin">เช็กอินเลย</button></div>',
-    [BST.OK]: '<button class="btn gold" data-op="checkin">เช็กอิน · ลูกค้ามาถึงแล้ว</button>' +
-      '<div class="btn-row"><button class="btn line" data-op="noshow">ไม่มาตามนัด</button><button class="btn line" data-op="shopcancel">ร้านยกเลิก</button></div>',
-    [BST.HOLD]: '<p class="muted small" style="margin-bottom:8px">ลูกค้ายังไม่ส่งสลิป (ระบบปล่อยรอบเองเมื่อหมดเวลา)</p>' +
-      '<button class="btn line" data-op="shopcancel">ร้านยกเลิก</button>',
-  }[b.status] || '';
-  bg.querySelector('.sheet').innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">คุณ' + esc(b.name) + '</h3>' + bstPill(b.status) + '</div>' +
-    '<div class="card" style="margin:12px 0">' +
-    li('วัน-เวลา', thDate(b.date) + ' · ' + b.time + '–' + b.end + ' น.') +
-    li('จำนวน', b.people + ' ท่าน × ' + baht(b.pricePer) + '.-') +
-    li('ยอดรวม', baht(b.total) + '.-') +
-    (b.credit ? li('ใช้เครดิตมัดจำ', baht(b.credit) + '.-') : '') +
-    li('ยอดโอนมัดจำ', baht(b.payDue) + '.-', 'dep') +
-    li('เก็บเงินที่ร้าน', baht(b.payAtShop) + '.-', 'big') +
-    li('เบอร์โทร', '<a href="tel:' + esc(b.phone) + '" style="color:var(--gold)">' + esc(b.phone) + '</a>') +
-    li('รหัสจอง', esc(b.id)) +
-    (b.memberId ? li('สมาชิก', fmtId(b.memberId)) : '') +
-    (b.note ? '<div class="li"><span>หมายเหตุ</span><b style="white-space:pre-line;font-weight:400;font-size:13px">' + esc(b.note) + '</b></div>' : '') + '</div>' +
-    (b.hasSlip ? '<p class="small" style="font-weight:600">สลิปมัดจำ · ตรวจยอด ' + baht(b.payDue) + ' บาท</p>' +
-      (slip ? '<img class="slip-img" src="' + slip + '" alt="สลิป">' : '<p class="muted small">โหลดรูปสลิปไม่ได้ · ดูได้ในโฟลเดอร์สลิปใน Google Drive</p>') : '') +
-    '<div style="margin-top:14px">' + acts + '</div>' +
-    '<button class="btn soft" id="sb-close" style="margin-top:10px">ปิด</button>';
-  bg.querySelector('#sb-close').onclick = () => bg.remove();
-  bg.querySelectorAll('[data-op]').forEach((x) => (x.onclick = () => staffBookingAction(bg, b, x.dataset.op)));
-}
-
-async function staffBookingAction(bg, b, op) {
-  const ask = {
-    reject: 'สลิปไม่ผ่าน?\nการจองจะถูกยกเลิก และแจ้งลูกค้าทาง LINE',
-    noshow: 'บันทึกว่าลูกค้าไม่มาตามนัด?\n(ไม่คืนมัดจำ)',
-    shopcancel: 'ร้านยกเลิกการจองนี้?\nแจ้งลูกค้าทาง LINE' + (b.hasSlip && b.payDue ? ' · ต้องโอนคืน ' + baht(b.payDue) + ' บาท' : ''),
-  }[op];
-  if (ask && !confirm(ask)) return;
-  bg.querySelectorAll('button').forEach((x) => (x.disabled = true));
-  try {
-    const out = await api('wbStaffAction', { bookingId: b.id, op: op });
-    const msg = { confirm: 'ยืนยันแล้ว · แจ้งลูกค้าแล้ว', reject: 'บันทึกสลิปไม่ผ่านแล้ว', noshow: 'บันทึกแล้ว', shopcancel: 'ยกเลิกแล้ว · แจ้งลูกค้าแล้ว',
-      checkin: 'เช็กอินแล้ว' + (out.earned != null ? ' · +' + out.earned + ' แต้ม' : '') }[op];
-    toast(msg, 'ok');
-    bg.remove();
-    loadStaffBookings();
-  } catch (e) {
-    bg.querySelectorAll('button').forEach((x) => (x.disabled = false));
-    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
-  }
-}
-
-async function scanQr() {
-  if (!state.liffReady || !liff.isApiAvailable('scanCodeV2')) {
-    toast('สแกนได้ในแอป LINE บนมือถือ · พิมพ์รหัสแทนได้', 'error');
-    return;
-  }
-  try {
-    const r = await liff.scanCodeV2();
-    if (r && r.value) lookup(r.value);
-  } catch (e) {
-    toast('สแกนไม่สำเร็จ ลองใหม่อีกครั้ง', 'error');
-  }
-}
-
-async function lookup(q) {
-  if (/^W\d{6}-?\d{3}$/i.test(String(q).trim())) return openStaffBooking(String(q).trim()); // QR การจอง Wellness
-  const box = $('#s-member');
-  // ให้แต้ม / แลกรางวัล / ขาย ย้ายไปหลังบ้านใหม่แล้ว
-  box.innerHTML = '<div class="card"><div class="card-title">ให้แต้ม · แลกรางวัล</div>' +
-    '<p class="muted small">ย้ายไปทำที่หลังบ้านใหม่แล้ว (หน้า "ขาย" หรือ "สมาชิก") · เปิดบน iPad หรือมือถือของพนักงาน</p>' +
-    '<button class="btn soft" onclick="openLink(CONFIG.BACKOFFICE_URL)">เปิดหลังบ้าน</button></div>';
-  if (box) return;
-  try {
-    const out = await api('staffLookup', { query: q });
-    state.staffMember = out.member;
-    state.staffRecent = out.recent;
-    renderStaffMember();
-  } catch (e) {
-    box.innerHTML = '';
-    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
-  }
-}
-
-function renderStaffMember() {
-  const m = state.staffMember;
-  if (!m) return;
-  const services = (state.data && state.data.services) || [];
-  const rewards = (state.data && state.data.rewards) || [];
-  if (!state.staffService || !services.find((s) => s.id === state.staffService)) {
-    state.staffService = services.length ? services[0].id : null;
-  }
-  const thisMonth = new Date().getMonth() + 1;
-
-  let h = '<div class="card">' +
-    '<div class="who-s">' +
-    (m.pictureUrl ? '<img class="avatar" src="' + esc(m.pictureUrl) + '" alt="">' : '<div class="avatar"></div>') +
-    '<div><div style="font-weight:600;font-size:18px">' + esc(m.displayName) + '</div>' +
-    '<div class="muted small">' + fmtId(m.memberId) + ' · ' + esc(m.phoneMasked) + '</div>' +
-    (m.birthdayMonth === thisMonth ? '<div class="small" style="color:var(--gold);font-weight:600">🎂 เดือนเกิดของลูกค้า</div>' : '') +
-    '</div></div>' +
-    '<div class="stat3"><div><b>' + m.points + '</b><span>แต้มคงเหลือ</span></div>' +
-    '<div><b>' + m.visits + '</b><span>ครั้งที่มา</span></div>' +
-    '<div><b>' + (m.nextPointBaht != null ? baht(m.nextPointBaht) : '-') + '</b><span>บาท ถึงแต้มถัดไป</span></div></div></div>';
-
-  // ให้แต้ม
-  h += '<div class="card"><div class="card-title">ให้แต้ม</div>';
-  if (!services.length) {
-    h += '<p class="muted small">ยังไม่มีบริการที่เปิดใช้ในแท็บ "บริการ"</p>';
-  } else {
-    if (services.length > 1) {
-      h += '<div class="seg">' + services.map((s) =>
-        '<button class="chip' + (s.id === state.staffService ? ' active' : '') + '" data-svc="' + esc(s.id) + '">' + esc(s.name) + '</button>').join('') + '</div>';
-    }
-    const svc = services.find((s) => s.id === state.staffService);
-    const byAmount = svc.earnType === 'ตามยอดเงิน';
-    h += '<form id="f-earn" novalidate>' +
-      '<label class="f" for="amt">' + (byAmount ? 'ยอดบิล (บาท)' : 'ยอดบิล (บาท) <span class="muted small">ไม่บังคับ</span>') + '</label>' +
-      '<input class="input big" id="amt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0">' +
-      '<label class="f" for="rcp">เลขที่ใบเสร็จ POS' + (byAmount ? '' : ' <span class="muted small">ไม่บังคับ</span>') + '</label>' +
-      '<input class="input" id="rcp" maxlength="40" autocomplete="off" placeholder="เช่น R-000123">' +
-      '<div class="preview" id="pv"></div>' +
-      '<button class="btn" id="btn-earn" type="submit" disabled>ยืนยันให้แต้ม</button></form>';
-  }
-  h += '</div>';
-
-  // แลกรางวัล
-  if (rewards.length) {
-    h += '<div class="card"><div class="card-title">แลกรางวัล</div>' + rewards.map((r) => {
-      const ok = m.points >= r.points;
-      return '<div class="reward' + (ok ? ' ready' : '') + '"><div class="ic">' + ICON.gift + '</div>' +
-        '<div class="body"><div class="nm">' + esc(r.name) + '</div><div class="st">ใช้ ' + r.points + ' แต้ม</div></div>' +
-        '<button class="pill" data-redeem="' + esc(r.id) + '"' + (ok ? '' : ' disabled style="opacity:.4"') + '>แลก</button></div>';
-    }).join('') + '</div>';
-  }
-
-  // ใช้เครดิตเงินสด
-  if (m.credit) {
-    h += '<div class="card"><div class="card-title">💳 เครดิตเงินสด ' + baht(m.credit.amount) + '.-</div>' +
-      '<p class="muted small" style="margin-top:-6px">' + (m.credit.expiry ? 'ใช้ได้ถึง ' + thDate(m.credit.expiry, true) + ' · ' : '') +
-      'หักเป็นค่าอาหาร/เครื่องดื่มแทนเงินสดได้</p>' +
-      '<form id="f-credit" novalidate><div class="row" style="margin-top:10px">' +
-      '<input class="input" id="cr-amt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="ยอดที่ใช้" style="flex:2">' +
-      '<button class="btn soft" type="submit" id="btn-credit" style="flex:1">ใช้เครดิต</button></div>' +
-      '<p class="muted small" style="margin-top:6px">ใส่ยอดไม่เกิน ' + baht(m.credit.amount) + ' บาท · ส่วนที่เกินเก็บเงินตามปกติ</p></form></div>';
-  }
-
-  // ประวัติล่าสุด
-  if (state.staffRecent && state.staffRecent.length) {
-    h += '<div class="card"><div class="card-title">ล่าสุด</div>' + histList(state.staffRecent) + '</div>';
-  }
-  h += '<button class="btn ghost" id="btn-next">ลูกค้าคนถัดไป</button>';
-
-  const box = $('#s-member');
-  box.innerHTML = h;
-
-  box.querySelectorAll('[data-svc]').forEach((b) => (b.onclick = () => { state.staffService = b.dataset.svc; renderStaffMember(); }));
-  box.querySelectorAll('[data-redeem]').forEach((b) => (b.onclick = () => redeem(b.dataset.redeem)));
-  $('#btn-next').onclick = () => { state.staffMember = null; box.innerHTML = ''; $('#q').value = ''; window.scrollTo({ top: 0, behavior: 'smooth' }); };
-
-  if ($('#f-credit')) $('#f-credit').onsubmit = (ev) => { ev.preventDefault(); useCredit(); };
-
-  const form = $('#f-earn');
-  if (form) {
-    $('#amt').oninput = updatePreview;
-    $('#rcp').oninput = updatePreview;
-    form.onsubmit = (ev) => { ev.preventDefault(); earn(); };
-    updatePreview();
-  }
-}
-
-/** คำนวณแต้มล่วงหน้าให้พนักงานตรวจก่อนกดยืนยัน (สูตรเดียวกับหลังบ้าน) */
-function calcPreview() {
-  const m = state.staffMember;
-  const svc = state.data.services.find((s) => s.id === state.staffService);
-  const amount = Math.round(num($('#amt').value) * 100) / 100;
-  const receipt = $('#rcp').value.trim();
-  if (svc.earnType === 'ตามยอดเงิน') {
-    if (!(amount > 0)) return { ok: false, text: 'กรอกยอดบิลเพื่อคำนวณแต้ม' };
-    const rate = Math.max(1, num(svc.earnValue));
-    const raw = round4(num(m.partial) + amount / rate);
-    const pts = Math.floor(raw + 1e-9);
-    const left = round4(raw - pts);
-    const next = Math.max(1, Math.ceil(round4((1 - left) * rate)));
-    return {
-      ok: !!receipt, points: pts, amount: amount,
-      text: '<b>+' + pts + ' แต้ม</b> จากยอด ' + baht(amount) + ' บาท' +
-        (num(m.partial) > 0 ? ' (รวมเศษเดิม ' + baht(Math.round(num(m.partial) * rate)) + ' บาท)' : '') +
-        '<br><span class="muted small">หลังให้แต้ม: อีก ' + baht(next) + ' บาท ได้แต้มถัดไป' +
-        (receipt ? '' : ' · <b style="color:var(--danger)">กรอกเลขใบเสร็จ</b>') + '</span>',
-    };
-  }
-  const pts = Math.max(0, Math.floor(num(svc.earnValue)));
-  return { ok: true, points: pts, amount: amount, text: '<b>+' + pts + ' แต้ม</b> จาก ' + esc(svc.name) };
-}
-
-function updatePreview() {
-  const p = calcPreview();
-  $('#pv').innerHTML = p.text;
-  const btn = $('#btn-earn');
-  btn.disabled = !p.ok;
-  btn.textContent = p.ok ? 'ยืนยันให้ ' + p.points + ' แต้ม' : 'ยืนยันให้แต้ม';
-}
-
-async function earn() {
-  const p = calcPreview();
-  if (!p.ok) return;
-  const btn = $('#btn-earn');
-  btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
-  try {
-    const out = await api('earn', {
-      memberId: state.staffMember.memberId, serviceId: state.staffService,
-      amount: p.amount, receiptNo: $('#rcp').value.trim(),
-    });
-    state.staffMember = out.member;
-    state.staffRecent = out.recent;
-    renderStaffMember();
-    toast('ให้ +' + out.earned + ' แต้มแล้ว · คงเหลือ ' + out.member.points, 'ok');
-  } catch (e) {
-    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
-    btn.disabled = false; updatePreview();
-  }
-}
-
-async function useCredit() {
-  const m = state.staffMember;
-  const amount = Math.round(num($('#cr-amt').value) * 100) / 100;
-  if (!(amount > 0)) return toast('กรอกยอดที่ใช้', 'error');
-  if (amount > m.credit.amount) return toast('เครดิตไม่พอ (มี ' + baht(m.credit.amount) + ' บาท)', 'error');
-  if (!confirm('ใช้เครดิต ' + baht(amount) + ' บาท ของ ' + m.displayName + '?')) return;
-  const btn = $('#btn-credit');
-  btn.disabled = true;
-  try {
-    const out = await api('useCredit', { memberId: m.memberId, amount: amount, receiptNo: $('#rcp') ? $('#rcp').value.trim() : '' });
-    state.staffMember = out.member;
-    state.staffRecent = out.recent;
-    renderStaffMember();
-    toast('ใช้เครดิต ' + baht(amount) + ' บาทแล้ว · คงเหลือ ' + baht(out.member.credit ? out.member.credit.amount : 0), 'ok');
-  } catch (e) {
-    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
-    btn.disabled = false;
-  }
-}
-
-async function redeem(rewardId) {
-  const r = state.data.rewards.find((x) => x.id === rewardId);
-  if (!r || !confirm('แลก "' + r.name + '" ให้ ' + state.staffMember.displayName + '?\nใช้ ' + r.points + ' แต้ม')) return;
-  try {
-    const out = await api('redeem', { memberId: state.staffMember.memberId, rewardId: rewardId });
-    state.staffMember = out.member;
-    state.staffRecent = out.recent;
-    renderStaffMember();
-    toast('แลกรางวัลเรียบร้อย 🎁', 'ok');
-  } catch (e) {
-    if (e.message !== 'REDIRECTING') toast(errText(e), 'error');
   }
 }
 
