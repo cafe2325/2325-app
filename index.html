@@ -1481,7 +1481,7 @@ function pageError(el, e, retry) {
 //  ส่วนที่ 10: บัตรสมาชิก (ลูกค้า)   ⛔ ไม่ต้องแก้
 // ════════════════════════════════════════════════════════════════
 
-const ME_KEY = 'app2325:me:' + CONFIG.LIFF_ID;
+const ME_KEY = 'app2325:me4:' + CONFIG.LIFF_ID;       // me4 = หลังย้ายการจองมาระบบใหม่ (ไม่ใช้ข้อมูลที่จำไว้จากระบบเดิม)
 
 /** จำข้อมูลบัตรไว้ในเครื่อง → เปิดครั้งหน้าเห็นบัตรทันที */
 function saveMe(me) {
@@ -1883,7 +1883,7 @@ function refreshBookView() {
 }
 
 // จำรายการจองไว้ในเครื่อง (แยกตามบัญชี LINE)
-const MINE_KEY = 'app2325:mine:' + CONFIG.LIFF_ID;
+const MINE_KEY = 'app2325:mine4:' + CONFIG.LIFF_ID;
 function lineSub() {
   try { const t = liff.getDecodedIDToken(); return (t && t.sub) || ''; } catch (e) { return ''; }
 }
@@ -2460,6 +2460,7 @@ async function openStaff() {
       return;
     }
     const me = await api('me');
+    saveMe(me);
     el.innerHTML = '<div class="page-head"><span class="staff-badge">โหมดพนักงาน</span>' +
       '<h1 style="margin-top:10px">' + (me.isStaff ? 'สวัสดี คุณ' + esc(me.staffName) : 'ยังไม่ได้เชื่อม LINE') + '</h1></div>' +
       '<div class="card"><p>งานของร้านทั้งหมด (ขาย · สมาชิก · แต้ม · การจอง Wellness) ย้ายไปที่ <b>หลังบ้าน</b> แล้ว</p>' +
@@ -2496,6 +2497,7 @@ document.addEventListener('click', (ev) => {
   if (l) { ev.preventDefault(); openLink(l.dataset.link); }
 });
 
+try { ['me', 'mine', 'wellness'].forEach((k) => Object.keys(localStorage).filter((x) => x.indexOf('app2325:' + k + ':') === 0).forEach((x) => localStorage.removeItem(x))); } catch (e) { /* ignore */ }
 debug('เริ่มแอป · หน้า ' + initialPage() + ' · ' + navigator.userAgent.slice(0, 90));
 buildTabbar();
 renderLoading();
